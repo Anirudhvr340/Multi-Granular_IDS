@@ -1,0 +1,19 @@
+# Ignore CSV data files
+*.csv
+*.npy
+
+# Numpy arrays
+time_window/*.npy
+time_window/processed/*.npy
+
+# Models
+*.pth
+*.pt
+*.pkl
+
+# Processed outputs
+time_window/processed/
+
+# Python cache
+__pycache__/
+*.pyc

@@ -1,0 +1,25 @@
+#!/bin/sh
+# Pre-push hook: reject pushes that introduce .csv files in commits
+# This hook scans the commits being pushed and rejects the push if any
+# committed files end in .csv.
+
+while read local_ref local_sha remote_ref remote_sha
+do
+  # Skip deletions
+  if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+    continue
+  fi
+
+  if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+    range="$local_sha"
+  else
+    range="$remote_sha..$local_sha"
+  fi
+
+  if git rev-list "$range" --pretty=format: --name-only | grep -E '\.csv$' >/dev/null; then
+    echo "Push rejected: commits include .csv files. Remove them or add to .gitignore."
+    exit 1
+  fi
+done
+
+exit 0
