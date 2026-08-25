@@ -1,163 +1,80 @@
+﻿import os
 import numpy as np
-import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader, TensorDataset
-from sklearn.preprocessing import StandardScaler
 import joblib
-import os
+from xgboost import XGBClassifier
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, f1_score
+from sklearn.utils.class_weight import compute_sample_weight
 
-# =============================
-# SSAE MODEL
-# =============================
-class SSAE(nn.Module):
-    def __init__(self, input_dim, hidden_dims):
-        super().__init__()
+INPUT_DIR = os.path.join(os.path.dirname(__file__), "processed")
+MODEL_PATH = os.path.join(INPUT_DIR, "xgb_time_window_model.joblib")
+REPO_DIR = os.path.dirname(__file__)
 
-        self.encoder = nn.Sequential(
-            nn.Linear(input_dim, hidden_dims[0]),
-            nn.ReLU(),
-            nn.BatchNorm1d(hidden_dims[0]),
-
-            nn.Linear(hidden_dims[0], hidden_dims[1]),
-            nn.ReLU(),
-        )
-
-        self.decoder = nn.Sequential(
-            nn.Linear(hidden_dims[1], hidden_dims[0]),
-            nn.ReLU(),
-
-            nn.Linear(hidden_dims[0], input_dim),
-        )
-
-    def forward(self, x):
-        encoded = self.encoder(x)
-        decoded = self.decoder(encoded)
-        return decoded
-
-    def encode(self, x):
-        return self.encoder(x)
+os.makedirs(INPUT_DIR, exist_ok=True)
 
 
-# =============================
-# 🔥 FIXED FLATTEN (CRITICAL)
-# =============================
-def flatten_windows(X, fixed_size=200):
-    fixed = []
-
-    for window in X:
-        if len(window) >= fixed_size:
-            fixed.append(window[:fixed_size])
-        else:
-            pad = np.zeros((fixed_size - len(window), window.shape[1]))
-            fixed.append(np.vstack([window, pad]))
-
-    fixed = np.array(fixed, dtype=np.float32)
-    return fixed.reshape((fixed.shape[0], -1))
-
-
-# =============================
-# TRAIN SSAE
-# =============================
-def train_ssae(X_train_flat, hidden_dims=[1024, 256], epochs=30, batch_size=256, lr=1e-3):
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-    input_dim = X_train_flat.shape[1]
-    model = SSAE(input_dim, hidden_dims).to(device)
-
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    criterion = nn.MSELoss()
-
-    dataset = TensorDataset(torch.tensor(X_train_flat, dtype=torch.float32))
-    loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-
-    print("🔹 Training SSAE...")
-
-    model.train()
-    for epoch in range(epochs):
-        total_loss = 0
-
-        for (batch,) in loader:
-            batch = batch.to(device)
-
-            optimizer.zero_grad()
-            output = model(batch)
-            loss = criterion(output, batch)
-
-            loss.backward()
-            optimizer.step()
-
-            total_loss += loss.item()
-
-        print(f"Epoch {epoch+1}/{epochs} | Loss: {total_loss:.4f}")
-
-    return model
-
-
-# =============================
-# MAIN
-# =============================
 def main():
-    print("🔹 Loading window data...")
+    print("🔹 Loading train/test data...")
+    X_train = np.load(os.path.join(INPUT_DIR, "X_train.npy"))
+    y_train = np.load(os.path.join(INPUT_DIR, "y_train.npy"))
+    X_test = np.load(os.path.join(INPUT_DIR, "X_test.npy"))
+    y_test = np.load(os.path.join(INPUT_DIR, "y_test.npy"))
+    class_names = np.load(os.path.join(INPUT_DIR, "window_class_names.npy"), allow_pickle=True).astype(str)
+    train_classes = np.unique(y_train)
+    train_label_map = {label: index for index, label in enumerate(train_classes)}
+    encoded_y_train = np.array([train_label_map[label] for label in y_train], dtype=np.int64)
 
-    # 🔥 FIX: allow_pickle for variable-length windows
-    X_train = np.load('processed/X_train.npy', allow_pickle=True)
-    X_test = np.load('processed/X_test.npy', allow_pickle=True)
+    print(f"🔹 Train samples: {len(y_train)}")
+    print(f"🔹 Test samples: {len(y_test)}")
 
-    print(f"Train samples: {len(X_train)}")
+    sample_weight = compute_sample_weight(class_weight="balanced", y=encoded_y_train)
 
-    # =============================
-    # 🔥 FIX: CONVERT VARIABLE → FIXED
-    # =============================
-    X_train_flat = flatten_windows(X_train)
-    X_test_flat = flatten_windows(X_test)
+    model = XGBClassifier(
+        objective="multi:softprob",
+        num_class=len(train_classes),
+        eval_metric="logloss",
+        tree_method="hist",
+        n_estimators=200,
+        max_depth=6,
+        learning_rate=0.05,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        random_state=42,
+        verbosity=0,
+    )
 
-    print("After flatten:", X_train_flat.shape)
+    print("🔹 Training XGBoost model...")
+    model.fit(X_train, encoded_y_train, sample_weight=sample_weight)
 
-    # =============================
-    # SCALING
-    # =============================
-    print("🔹 Scaling features...")
+    print("🔹 Evaluating on test set...")
+    encoded_predictions = model.predict(X_test).astype(np.int64)
+    y_pred = train_classes[encoded_predictions]
 
-    scaler = StandardScaler()
-    X_train_flat = scaler.fit_transform(X_train_flat)
-    X_test_flat = scaler.transform(X_test_flat)
+    accuracy = accuracy_score(y_test, y_pred)
+    f1 = f1_score(y_test, y_pred, average="weighted", zero_division=0)
 
-    os.makedirs('processed', exist_ok=True)
-    joblib.dump(scaler, 'processed/ssae_scaler.pkl')
+    print(f"Accuracy: {accuracy:.4f}")
+    print(f"Weighted F1 score: {f1:.4f}")
 
-    # =============================
-    # TRAIN SSAE
-    # =============================
-    ssae = train_ssae(X_train_flat)
+    report = classification_report(
+        y_test,
+        y_pred,
+        labels=np.arange(len(class_names)),
+        target_names=class_names,
+        digits=4,
+        zero_division=0,
+    )
+    print(report)
 
-    # =============================
-    # FEATURE EXTRACTION
-    # =============================
-    print("🔹 Extracting SSAE features...")
+    cm = confusion_matrix(y_test, y_pred)
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    ssae.eval()
+    os.makedirs(os.path.join(REPO_DIR, "reports"), exist_ok=True)
+    with open(os.path.join(REPO_DIR, "reports", "classification_report.txt"), "w") as f:
+        f.write(report)
+    np.savetxt(os.path.join(REPO_DIR, "reports", "confusion_matrix.csv"), cm, delimiter=",")
 
-    with torch.no_grad():
-        X_train_ssae = ssae.encode(
-            torch.tensor(X_train_flat, dtype=torch.float32).to(device)
-        ).cpu().numpy()
-
-        X_test_ssae = ssae.encode(
-            torch.tensor(X_test_flat, dtype=torch.float32).to(device)
-        ).cpu().numpy()
-
-    print("SSAE feature shape:", X_train_ssae.shape)
-
-    # =============================
-    # SAVE
-    # =============================
-    np.save('processed/ssae_features_train.npy', X_train_ssae)
-    np.save('processed/ssae_features_test.npy', X_test_ssae)
-
-    torch.save(ssae.state_dict(), 'processed/ssae_model.pth')
-
-    print("✅ SSAE completed successfully!")
+    joblib.dump(model, MODEL_PATH)
+    joblib.dump(train_classes, os.path.join(INPUT_DIR, "xgb_model_classes.npy"))
+    print(f"\n✅ Model saved to {MODEL_PATH}")
 
 
 if __name__ == '__main__':

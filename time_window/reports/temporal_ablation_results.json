@@ -1,0 +1,247 @@
+[
+  {
+    "experiment": "static_only",
+    "accuracy": 0.6074329501915708,
+    "macro_f1": 0.15170566001626717,
+    "weighted_f1": 0.46075508312220304,
+    "training_seconds": 3.4408260000018345,
+    "per_class": {
+      "Benign": {
+        "recall": 1.0,
+        "f1-score": 0.7585283000813359,
+        "support": 7927.0
+      },
+      "Bot": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 3565.0
+      },
+      "DDOS attack-HOIC": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "DDOS attack-LOIC-UDP": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "DDoS attacks-LOIC-HTTP": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "DoS attacks-GoldenEye": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "DoS attacks-Hulk": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "DoS attacks-SlowHTTPTest": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "DoS attacks-Slowloris": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "FTP-BruteForce": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "Infilteration": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1558.0
+      },
+      "SSH-Bruteforce": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "macro avg": {
+        "recall": 0.08333333333333333,
+        "f1-score": 0.06321069167344466,
+        "support": 13050.0
+      },
+      "weighted avg": {
+        "recall": 0.6074329501915708,
+        "f1-score": 0.46075508312220304,
+        "support": 13050.0
+      }
+    }
+  },
+  {
+    "experiment": "temporal_only",
+    "accuracy": 0.5963218390804598,
+    "macro_f1": 0.07794080825279183,
+    "weighted_f1": 0.4734381509730888,
+    "training_seconds": 3.0568200000016077,
+    "per_class": {
+      "Benign": {
+        "recall": 0.9817080862873723,
+        "f1-score": 0.7794080825279183,
+        "support": 7927.0
+      },
+      "Bot": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 3565.0
+      },
+      "DDOS attack-HOIC": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "DDOS attack-LOIC-UDP": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "DDoS attacks-LOIC-HTTP": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "DoS attacks-GoldenEye": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "DoS attacks-Hulk": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "DoS attacks-SlowHTTPTest": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "DoS attacks-Slowloris": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "FTP-BruteForce": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "Infilteration": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1558.0
+      },
+      "SSH-Bruteforce": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "macro avg": {
+        "recall": 0.08180900719061436,
+        "f1-score": 0.06495067354399318,
+        "support": 13050.0
+      },
+      "weighted avg": {
+        "recall": 0.5963218390804598,
+        "f1-score": 0.4734381509730888,
+        "support": 13050.0
+      }
+    }
+  },
+  {
+    "experiment": "static_plus_temporal",
+    "accuracy": 0.6074329501915708,
+    "macro_f1": 0.1531047802993723,
+    "weighted_f1": 0.4650044419284,
+    "training_seconds": 4.509256400000595,
+    "per_class": {
+      "Benign": {
+        "recall": 1.0,
+        "f1-score": 0.7655239014968614,
+        "support": 7927.0
+      },
+      "Bot": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 3565.0
+      },
+      "DDOS attack-HOIC": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "DDOS attack-LOIC-UDP": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "DDoS attacks-LOIC-HTTP": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "DoS attacks-GoldenEye": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "DoS attacks-Hulk": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "DoS attacks-SlowHTTPTest": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "DoS attacks-Slowloris": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "FTP-BruteForce": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "Infilteration": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1558.0
+      },
+      "SSH-Bruteforce": {
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "macro avg": {
+        "recall": 0.08333333333333333,
+        "f1-score": 0.06379365845807179,
+        "support": 13050.0
+      },
+      "weighted avg": {
+        "recall": 0.6074329501915708,
+        "f1-score": 0.4650044419284,
+        "support": 13050.0
+      }
+    }
+  },
+  {
+    "experiment": "lstm_order_shuffle",
+    "status": "run with SHUFFLE_SEQUENCE=1 python step5_temporal_lstm.py"
+  },
+  {
+    "experiment": "timestamp_shuffle_control",
+    "status": "rebuild raw rows with shuffled timestamps before step0; do not use saved windows"
+  }
+]

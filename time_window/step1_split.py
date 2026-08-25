@@ -1,74 +1,71 @@
+﻿import os
 import numpy as np
-import os
+from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
+
+INPUT_DIR = os.path.join(os.path.dirname(__file__), "processed")
+TRAIN_RATIO = 0.8
+RANDOM_STATE = 42
+
+os.makedirs(INPUT_DIR, exist_ok=True)
+
 
 def main():
     print("🔹 Loading window data...")
+    X = np.load(os.path.join(INPUT_DIR, "window_features.npy"))
+    y = np.load(os.path.join(INPUT_DIR, "window_multiclass_labels.npy"))
+    times = np.load(os.path.join(INPUT_DIR, "window_times.npy"))
+    X = np.nan_to_num(X, nan=0.0, posinf=0.0, neginf=0.0)
 
-    # ✅ FIX: allow_pickle=True for variable-length windows
-    X_windows = np.load(os.path.join('processed', 'X_windows.npy'), allow_pickle=True)
-    y_windows = np.load(os.path.join('processed', 'y_windows.npy'))
-
-    print(f"Total samples: {len(y_windows)}")
-
-    # ==============================
-    # CHECK CLASS DISTRIBUTION
-    # ==============================
-    unique, counts = np.unique(y_windows, return_counts=True)
-
-    print("\n🔹 Class distribution before split:")
-    for u, c in zip(unique, counts):
-        print(f"class {u}: {c}")
-
-    # ==============================
-    # HANDLE RARE CLASSES
-    # ==============================
-    min_samples = counts.min()
-
-    if min_samples < 2:
-        print("\n⚠️ Warning: Some classes have <2 samples")
-        print("👉 Using NON-stratified split")
-        stratify_option = None
-    else:
-        stratify_option = y_windows
-
-    # ==============================
-    # SPLIT
-    # ==============================
-    X_train, X_test, y_train, y_test = train_test_split(
-        X_windows,
-        y_windows,
-        test_size=0.2,
-        stratify=stratify_option,
-        random_state=42
+    all_indices = np.arange(len(y))
+    train_indices, test_indices = train_test_split(
+        all_indices,
+        train_size=TRAIN_RATIO,
+        random_state=RANDOM_STATE,
+        stratify=y,
     )
+    train_indices = np.sort(train_indices)
+    test_indices = np.sort(test_indices)
+    total = len(y)
+    split_index = len(train_indices)
+    print(f"🔹 Total windows: {total}")
+    print(f"🔹 Training windows: {split_index}")
+    print(f"🔹 Test windows: {total - split_index}")
 
-    # ==============================
-    # VERIFY DISTRIBUTION
-    # ==============================
-    print("\n🔹 Train distribution:")
+    print(f"Random state: {RANDOM_STATE}")
+    print("Split strategy: stratified random windows")
+    X_train, X_test = X[train_indices], X[test_indices]
+    y_train, y_test = y[train_indices], y[test_indices]
+    times_train, times_test = times[train_indices], times[test_indices]
+
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    print("\n🔹 Train class distribution:")
     unique, counts = np.unique(y_train, return_counts=True)
     for u, c in zip(unique, counts):
         print(f"class {u}: {c}")
 
-    print("\n🔹 Test distribution:")
+    print("\n🔹 Test class distribution:")
     unique, counts = np.unique(y_test, return_counts=True)
     for u, c in zip(unique, counts):
         print(f"class {u}: {c}")
 
-    # ==============================
-    # SAVE
-    # ==============================
-    os.makedirs('processed', exist_ok=True)
+    np.save(os.path.join(INPUT_DIR, "X_train.npy"), X_train)
+    np.save(os.path.join(INPUT_DIR, "X_test.npy"), X_test)
+    np.save(os.path.join(INPUT_DIR, "y_train.npy"), y_train)
+    np.save(os.path.join(INPUT_DIR, "y_test.npy"), y_test)
+    np.save(os.path.join(INPUT_DIR, "window_times_train.npy"), times_train)
+    np.save(os.path.join(INPUT_DIR, "window_times_test.npy"), times_test)
+    np.save(os.path.join(INPUT_DIR, "train_indices.npy"), train_indices)
+    np.save(os.path.join(INPUT_DIR, "test_indices.npy"), test_indices)
 
-    # ✅ Keep pickle format for variable-length data
-    np.save('processed/X_train.npy', X_train, allow_pickle=True)
-    np.save('processed/X_test.npy', X_test, allow_pickle=True)
+    from joblib import dump
+    dump(scaler, os.path.join(INPUT_DIR, "time_window_scaler.joblib"))
 
-    np.save('processed/y_train.npy', y_train)
-    np.save('processed/y_test.npy', y_test)
+    print("\n✅ Stratified split completed successfully!")
 
-    print("\n✅ Split completed successfully!")
 
 if __name__ == '__main__':
     main()

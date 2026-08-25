@@ -1,152 +1,300 @@
+﻿import warnings
+warnings.filterwarnings("ignore")
 import os
 import glob
+import gc
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder, MinMaxScaler
+from sklearn.preprocessing import LabelEncoder
 
 # ==============================
 # CONFIG
 # ==============================
-DATA_PATH = "."
-OUTPUT_DIR = "processed"
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+DATA_PATTERN = os.path.join(ROOT_DIR, "*.csv")
+OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "processed")
 
-WINDOW_SECONDS = 2   # 🔥 IMPORTANT (keep this)
-FIXED_WINDOW_SIZE = 200
-MAX_ROWS_PER_FILE = 500_000   # limit per file
+WINDOW_SECONDS = int(os.environ.get("WINDOW_SECONDS", "5"))
+CHUNK_SIZE = 100_000
+MAX_ROWS_PER_FILE = 500_000
+USECOLS = [
+    "Timestamp",
+    "Label",
+    "Tot Fwd Pkts",
+    "Tot Bwd Pkts",
+    "TotLen Fwd Pkts",
+    "TotLen Bwd Pkts",
+    "Flow Duration",
+    "Flow Byts/s",
+    "Flow Pkts/s",
+    "Flow IAT Mean",
+    "Pkt Len Mean",
+    "Active Mean",
+    "Idle Mean",
+    "Dst Port",
+    "Protocol",
+    "SYN Flag Cnt",
+    "FIN Flag Cnt",
+    "RST Flag Cnt",
+    "PSH Flag Cnt",
+    "ACK Flag Cnt",
+    "URG Flag Cnt",
+]
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# ==============================
-# LOAD DATA
-# ==============================
-print("🔹 Loading CSV files...")
 
-files = glob.glob(os.path.join(DATA_PATH, "*.csv"))
-print("Using files:", files)
+def get_numeric_columns(df):
+    return [c for c in df.columns if c not in ["Timestamp", "Label", "Protocol"]]
 
-df_list = []
 
-for file in files:
-    print(f"\n🔸 Loading file: {file}")
+def clean_chunk(chunk):
+    chunk = chunk.copy()
+    chunk = chunk.drop_duplicates()
+    chunk["Timestamp"] = pd.to_datetime(
+        chunk["Timestamp"], errors="coerce", dayfirst=True, format="mixed"
+    )
+    chunk = chunk.loc[chunk["Timestamp"].dt.year == 2018]
+    chunk["Label"] = chunk["Label"].astype(str).str.strip()
+    chunk = chunk.dropna(subset=["Timestamp", "Label"])
+    chunk = chunk.loc[chunk["Label"] != ""]
 
-    temp = pd.read_csv(file, low_memory=False)
+    chunk["Timestamp"] = chunk["Timestamp"].astype("datetime64[ns]")
 
-    temp.drop_duplicates(inplace=True)
-    temp.replace([np.inf, -np.inf], np.nan, inplace=True)
-    temp.dropna(inplace=True)
+    numeric_cols = get_numeric_columns(chunk)
+    for col in numeric_cols:
+        chunk[col] = pd.to_numeric(chunk[col], errors="coerce")
+    chunk[numeric_cols] = chunk[numeric_cols].replace([np.inf, -np.inf], np.nan).fillna(0.0)
+    return chunk
 
-    print(f"    Original shape: {temp.shape}")
 
-    # 🔥 RANDOM SAMPLE (NOT HEAD)
-    if len(temp) > MAX_ROWS_PER_FILE:
-        temp = temp.sample(MAX_ROWS_PER_FILE, random_state=42)
+def window_aggregate(window_df, window_start):
+    total_flows = len(window_df)
+    total_fwd_pkts = float(window_df.get("Tot Fwd Pkts", pd.Series([0])).astype(float).sum())
+    total_bwd_pkts = float(window_df.get("Tot Bwd Pkts", pd.Series([0])).astype(float).sum())
+    total_packets = total_fwd_pkts + total_bwd_pkts
+    total_fwd_bytes = float(window_df.get("TotLen Fwd Pkts", pd.Series([0])).astype(float).sum())
+    total_bwd_bytes = float(window_df.get("TotLen Bwd Pkts", pd.Series([0])).astype(float).sum())
+    total_bytes = total_fwd_bytes + total_bwd_bytes
 
-    print(f"    Sampled shape: {temp.shape}")
+    def safe_mean(col):
+        if col not in window_df.columns:
+            return 0.0
+        try:
+            vals = pd.to_numeric(window_df[col], errors="coerce")
+            return float(vals.mean()) if len(vals.dropna()) > 0 else 0.0
+        except:
+            return 0.0
 
-    df_list.append(temp)
+    def safe_std(col):
+        if col not in window_df.columns:
+            return 0.0
+        values = pd.to_numeric(window_df[col], errors="coerce").dropna()
+        return float(values.std(ddof=0)) if len(values) > 0 else 0.0
 
-df = pd.concat(df_list, ignore_index=True)
+    timestamps = pd.to_datetime(window_df["Timestamp"], errors="coerce").sort_values()
+    inter_arrivals = timestamps.diff().dt.total_seconds().dropna()
+    mean_inter_arrival = float(inter_arrivals.mean()) if len(inter_arrivals) else 0.0
+    std_inter_arrival = float(inter_arrivals.std(ddof=0)) if len(inter_arrivals) else 0.0
+    burstiness = std_inter_arrival / max(mean_inter_arrival, 1e-6)
 
-print(f"✅ Total rows used: {len(df)}")
+    def quantile(col, q):
+        if col not in window_df.columns:
+            return 0.0
+        values = pd.to_numeric(window_df[col], errors="coerce").dropna()
+        return float(values.quantile(q)) if len(values) else 0.0
 
-# ==============================
-# TIMESTAMP
-# ==============================
-df['Timestamp'] = pd.to_datetime(df['Timestamp'], dayfirst=True, errors='coerce')
-df.dropna(subset=['Timestamp'], inplace=True)
-df = df.sort_values('Timestamp')
+    flow_packets = (
+        pd.to_numeric(window_df.get("Tot Fwd Pkts", 0), errors="coerce").fillna(0)
+        + pd.to_numeric(window_df.get("Tot Bwd Pkts", 0), errors="coerce").fillna(0)
+    )
+    flow_bytes = (
+        pd.to_numeric(window_df.get("TotLen Fwd Pkts", 0), errors="coerce").fillna(0)
+        + pd.to_numeric(window_df.get("TotLen Bwd Pkts", 0), errors="coerce").fillna(0)
+    )
+    flow_duration = pd.to_numeric(window_df.get("Flow Duration", 0), errors="coerce").fillna(0)
+    syn = pd.to_numeric(window_df.get("SYN Flag Cnt", 0), errors="coerce").fillna(0)
+    ack = pd.to_numeric(window_df.get("ACK Flag Cnt", 0), errors="coerce").fillna(0)
+    rst = pd.to_numeric(window_df.get("RST Flag Cnt", 0), errors="coerce").fillna(0)
+    flow_count = max(total_flows, 1)
+    active_span_seconds = max(
+        float((timestamps.iloc[-1] - timestamps.iloc[0]).total_seconds())
+        if len(timestamps) else 0.0,
+        0.0,
+    )
 
-# ==============================
-# FEATURES
-# ==============================
-label_col = "Label"
+    label_counts = window_df["Label"].value_counts()
+    attack_count = int((window_df["Label"] != "Benign").sum())
+    attack_labels = window_df.loc[window_df["Label"] != "Benign", "Label"].value_counts()
+    # A minority attack must not disappear because benign flows share its window.
+    majority_label = attack_labels.idxmax() if len(attack_labels) else "Benign"
 
-features = df.drop(columns=[label_col, 'Timestamp'], errors='ignore')
+    return {
+        "window_start": window_start,
+        "total_flows": total_flows,
+        "flow_rate": total_flows / WINDOW_SECONDS,
+        "total_packets": total_packets,
+        "packet_rate": total_packets / WINDOW_SECONDS,
+        "total_bytes": total_bytes,
+        "byte_rate": total_bytes / WINDOW_SECONDS,
+        "total_fwd_pkts": total_fwd_pkts,
+        "total_bwd_pkts": total_bwd_pkts,
+        "total_fwd_bytes": total_fwd_bytes,
+        "total_bwd_bytes": total_bwd_bytes,
+        "fwd_bwd_pkt_ratio": total_fwd_pkts / max(total_bwd_pkts, 1.0),
+        "fwd_bwd_byte_ratio": total_fwd_bytes / max(total_bwd_bytes, 1.0),
+        "mean_flow_duration": safe_mean("Flow Duration"),
+        "mean_flow_bytes": safe_mean("Flow Byts/s"),
+        "mean_flow_pkts": safe_mean("Flow Pkts/s"),
+        "mean_pkt_len": safe_mean("Pkt Len Mean"),
+        "mean_iat": safe_mean("Flow IAT Mean"),
+        "mean_active": safe_mean("Active Mean"),
+        "mean_idle": safe_mean("Idle Mean"),
+        "std_flow_duration": safe_std("Flow Duration"),
+        "std_flow_bytes": safe_std("Flow Byts/s"),
+        "std_flow_pkts": safe_std("Flow Pkts/s"),
+        "flow_duration_p50": quantile("Flow Duration", 0.50),
+        "flow_duration_p90": quantile("Flow Duration", 0.90),
+        "flow_duration_p99": quantile("Flow Duration", 0.99),
+        "flow_packets_p50": float(flow_packets.quantile(0.50)),
+        "flow_packets_p90": float(flow_packets.quantile(0.90)),
+        "flow_bytes_p50": float(flow_bytes.quantile(0.50)),
+        "flow_bytes_p90": float(flow_bytes.quantile(0.90)),
+        "single_packet_flow_ratio": float((flow_packets <= 1).sum() / flow_count),
+        "small_flow_ratio": float((flow_packets <= 4).sum() / flow_count),
+        "zero_bwd_flow_ratio": float((pd.to_numeric(window_df.get("Tot Bwd Pkts", 0), errors="coerce").fillna(0) == 0).sum() / flow_count),
+        "syn_no_ack_ratio": float(((syn > 0) & (ack == 0)).sum() / flow_count),
+        "rst_flow_ratio": float((rst > 0).sum() / flow_count),
+        "active_span_seconds": active_span_seconds,
+        "window_occupancy": active_span_seconds / max(WINDOW_SECONDS, 1),
+        "flow_density": total_flows / max(active_span_seconds, 1e-6),
+        "mean_inter_arrival": mean_inter_arrival,
+        "std_inter_arrival": std_inter_arrival,
+        "burstiness": burstiness,
+        "unique_dst_ports": int(window_df["Dst Port"].nunique()) if "Dst Port" in window_df.columns else 0,
+        "unique_protocols": int(window_df["Protocol"].nunique()) if "Protocol" in window_df.columns else 0,
+        "total_syn": float(pd.to_numeric(window_df.get("SYN Flag Cnt", pd.Series([0])), errors="coerce").sum()),
+        "total_fin": float(pd.to_numeric(window_df.get("FIN Flag Cnt", pd.Series([0])), errors="coerce").sum()),
+        "total_rst": float(pd.to_numeric(window_df.get("RST Flag Cnt", pd.Series([0])), errors="coerce").sum()),
+        "total_psh": float(pd.to_numeric(window_df.get("PSH Flag Cnt", pd.Series([0])), errors="coerce").sum()),
+        "total_ack": float(pd.to_numeric(window_df.get("ACK Flag Cnt", pd.Series([0])), errors="coerce").sum()),
+        "total_urg": float(pd.to_numeric(window_df.get("URG Flag Cnt", pd.Series([0])), errors="coerce").sum()),
+        "majority_label": majority_label,
+        "attack_count": attack_count,
+        "attack_ratio": attack_count / max(total_flows, 1),
+    }
 
-features = features.apply(pd.to_numeric, errors='coerce')
-features.replace([np.inf, -np.inf], np.nan, inplace=True)
-features.dropna(axis=1, how='all', inplace=True)
-features.fillna(0, inplace=True)
 
-df = pd.concat([features, df[[label_col, 'Timestamp']]], axis=1)
+def process_chunk(chunk, pending):
+    if pending is not None and not pending.empty:
+        chunk = pd.concat([pending, chunk], ignore_index=True)
 
-# ==============================
-# CLASS DISTRIBUTION
-# ==============================
-print("\n🔹 Class distribution BEFORE windowing:")
-print(df[label_col].value_counts())
+    if chunk.empty:
+        return pd.DataFrame(), []
 
-# ==============================
-# ENCODE LABELS
-# ==============================
-le = LabelEncoder()
-df[label_col] = le.fit_transform(df[label_col])
+    chunk["Timestamp"] = pd.to_datetime(
+        chunk["Timestamp"], errors="coerce", dayfirst=True, format="mixed"
+    )
+    chunk = chunk.loc[chunk["Timestamp"].dt.year == 2018]
+    chunk = chunk.dropna(subset=["Timestamp"]).copy()
+    chunk["Timestamp"] = chunk["Timestamp"].astype("datetime64[ns]")
 
-class_names = le.classes_
-np.save(os.path.join(OUTPUT_DIR, "class_names.npy"), class_names)
+    if chunk.empty:
+        return pd.DataFrame(), []
 
-# ==============================
-# SCALE
-# ==============================
-X = df.drop(columns=[label_col, 'Timestamp']).values
-y = df[label_col].values
+    chunk = chunk.sort_values("Timestamp").reset_index(drop=True)
+    chunk["window_start"] = chunk["Timestamp"].dt.floor(f"{WINDOW_SECONDS}s")
+    last_window_start = chunk["window_start"].iloc[-1]
 
-scaler = MinMaxScaler()
-X = scaler.fit_transform(X)
+    pending_mask = chunk["window_start"] == last_window_start
+    pending_chunk = chunk[pending_mask].copy()
+    finalize_chunk = chunk[~pending_mask].copy()
 
-df_scaled = pd.DataFrame(X)
-df_scaled['Label'] = y
-df_scaled['Timestamp'] = df['Timestamp'].values
+    aggregated = []
+    if not finalize_chunk.empty:
+        for window_start, window_df in finalize_chunk.groupby("window_start"):
+            aggregated.append(window_aggregate(window_df, window_start))
 
-# ==============================
-# WINDOWING
-# ==============================
-print("\n🔹 Creating time-based windows...")
+    return pending_chunk, aggregated
 
-df_scaled = df_scaled.sort_values('Timestamp')
-df_scaled.set_index('Timestamp', inplace=True)
 
-groups = df_scaled.groupby(pd.Grouper(freq=f'{WINDOW_SECONDS}s'))
+def main():
+    print("Loading CICIDS2018 CSV files in chunks...")
+    files = sorted(glob.glob(DATA_PATTERN))
+    print("Data files found:", files)
 
-X_windows = []
-y_windows = []
+    window_rows = []
 
-for i, (_, window_df) in enumerate(groups):
-    if len(window_df) == 0:
-        continue
+    for file in files:
+        print(f"\nLoading file: {file}")
+        file_chunks = []
+        reader = pd.read_csv(
+            file,
+            usecols=USECOLS,
+            dtype=str,
+            chunksize=CHUNK_SIZE,
+            nrows=MAX_ROWS_PER_FILE,
+            low_memory=False,
+            na_values=["", "NA", "NaN", "nan", "?"],
+        )
 
-    features = window_df.drop(columns=['Label']).values
+        total_rows = 0
+        for chunk in reader:
+            chunk = clean_chunk(chunk)
+            total_rows += len(chunk)
+            if not chunk.empty:
+                file_chunks.append(chunk)
+        print(f"    Rows processed: {total_rows}")
+        if file_chunks:
+            # Files are separate calendar days, so no window can cross files.
+            combined = pd.concat(file_chunks, ignore_index=True)
+            combined = combined.sort_values("Timestamp").reset_index(drop=True)
+            combined["window_start"] = combined["Timestamp"].dt.floor(f"{WINDOW_SECONDS}s")
+            for window_start, window_df in combined.groupby("window_start", sort=True):
+                window_rows.append(window_aggregate(window_df, window_start))
+            del file_chunks, combined
+            gc.collect()
 
-    if len(features) >= FIXED_WINDOW_SIZE:
-        features = features[:FIXED_WINDOW_SIZE]
-    else:
-        pad = np.zeros((FIXED_WINDOW_SIZE - len(features), features.shape[1]))
-        features = np.vstack([features, pad])
+    if not window_rows:
+        raise RuntimeError("No windows were generated. Check the CSV files and Timestamp parsing.")
 
-    X_windows.append(features)
-    y_windows.append(window_df['Label'].values[-1])
+    if not window_rows:
+        raise RuntimeError("No windows were generated. Check the CSV files and Timestamp parsing.")
 
-    if (i + 1) % 500 == 0:
-        print(f"{i+1} windows processed")
+    features_df = pd.DataFrame(window_rows)
+    features_df = features_df.sort_values("window_start").reset_index(drop=True)
+    day_groups = features_df["window_start"].dt.normalize()
+    for column in ["total_flows", "total_packets", "total_bytes", "flow_rate", "packet_rate", "byte_rate"]:
+        previous = features_df.groupby(day_groups, sort=False)[column].shift(1)
+        features_df[f"previous_{column}"] = previous.fillna(features_df[column])
+        features_df[f"delta_{column}"] = (features_df[column] - previous).fillna(0.0)
+    # These are target-derived diagnostics, never model inputs.
+    numeric_columns = [
+        column for column in features_df.select_dtypes(include=[np.number]).columns
+        if column not in ["attack_count", "attack_ratio"]
+    ]
+    features_df[numeric_columns] = (
+        features_df[numeric_columns]
+        .replace([np.inf, -np.inf], np.nan)
+        .fillna(0.0)
+    )
 
-X_windows = np.array(X_windows, dtype=np.float32)
-y_windows = np.array(y_windows, dtype=np.int64)
+    print(f"Total windows generated: {len(features_df)}")
+    print("Example feature row:")
+    print(features_df.head(2).T)
 
-print(f"\n✅ Window shape: {X_windows.shape}")
+    label_encoder = LabelEncoder()
+    features_df["majority_label_encoded"] = label_encoder.fit_transform(features_df["majority_label"])
+    np.save(os.path.join(OUTPUT_DIR, "window_class_names.npy"), label_encoder.classes_)
 
-# ==============================
-# FINAL DISTRIBUTION
-# ==============================
-print("\n🔹 Class distribution AFTER windowing:")
+    np.save(os.path.join(OUTPUT_DIR, "window_features.npy"), features_df[numeric_columns].to_numpy(dtype=np.float32))
+    np.save(os.path.join(OUTPUT_DIR, "window_binary_labels.npy"), np.array((features_df["attack_count"] > 0).astype(np.int64), dtype=np.int64))
+    np.save(os.path.join(OUTPUT_DIR, "window_multiclass_labels.npy"), features_df["majority_label_encoded"].to_numpy(dtype=np.int64))
+    np.save(os.path.join(OUTPUT_DIR, "window_times.npy"), features_df["window_start"].to_numpy(dtype="datetime64[ns]"))
+    np.save(os.path.join(OUTPUT_DIR, "window_feature_names.npy"), np.array(numeric_columns, dtype=object))
 
-unique, counts = np.unique(y_windows, return_counts=True)
-for u, c in zip(unique, counts):
-    print(f"class {u} ({class_names[u]}): {c}")
+    print("\nStep 0 COMPLETED: window features saved to processed/")
 
-# ==============================
-# SAVE
-# ==============================
-np.save(os.path.join(OUTPUT_DIR, "X_windows.npy"), X_windows)
-np.save(os.path.join(OUTPUT_DIR, "y_windows.npy"), y_windows)
 
-print("\n✅ Step 0 COMPLETED 🚀")
+if __name__ == "__main__":
+    main()
