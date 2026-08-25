@@ -1,0 +1,21 @@
+Accuracy: 0.6060
+Macro F1: 0.0846
+
+                          precision    recall  f1-score   support
+
+                  Benign     0.6152    0.9973    0.7610      7916
+                     Bot     0.0000    0.0000    0.0000      3554
+        DDOS attack-HOIC     0.0000    0.0000    0.0000         0
+    DDOS attack-LOIC-UDP     0.0000    0.0000    0.0000         0
+  DDoS attacks-LOIC-HTTP     0.0000    0.0000    0.0000         0
+   DoS attacks-GoldenEye     0.0000    0.0000    0.0000         0
+        DoS attacks-Hulk     0.0000    0.0000    0.0000         0
+DoS attacks-SlowHTTPTest     0.0000    0.0000    0.0000         0
+   DoS attacks-Slowloris     0.0000    0.0000    0.0000         0
+          FTP-BruteForce     0.0000    0.0000    0.0000         0
+           Infilteration     0.0000    0.0000    0.0000      1558
+          SSH-Bruteforce     0.0000    0.0000    0.0000         0
+
+                accuracy                         0.6060     13028
+               macro avg     0.0513    0.0831    0.0634     13028
+            weighted avg     0.3738    0.6060    0.4624     13028

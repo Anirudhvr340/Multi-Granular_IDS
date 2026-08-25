@@ -1,0 +1,21 @@
+                          precision    recall  f1-score   support
+
+                  Benign     0.9797    0.7730    0.8642      7246
+                     Bot     0.9951    0.9865    0.9908       817
+        Brute Force -Web     0.1846    0.6102    0.2835        59
+        Brute Force -XSS     0.7391    0.6296    0.6800        27
+        DDOS attack-HOIC     1.0000    1.0000    1.0000        25
+    DDOS attack-LOIC-UDP     0.8421    0.9412    0.8889        51
+  DDoS attacks-LOIC-HTTP     0.9819    0.9477    0.9645       172
+   DoS attacks-GoldenEye     1.0000    0.9714    0.9855        35
+        DoS attacks-Hulk     1.0000    1.0000    1.0000         4
+DoS attacks-SlowHTTPTest     1.0000    1.0000    1.0000       110
+   DoS attacks-Slowloris     0.8818    0.9700    0.9238       100
+          FTP-BruteForce     0.9957    1.0000    0.9979       233
+           Infilteration     0.3065    0.9128    0.4589       688
+           SQL Injection     0.0426    0.1429    0.0656        14
+          SSH-Bruteforce     1.0000    1.0000    1.0000       218
+
+                accuracy                         0.8187      9799
+               macro avg     0.7966    0.8590    0.8069      9799
+            weighted avg     0.9264    0.8187    0.8522      9799
