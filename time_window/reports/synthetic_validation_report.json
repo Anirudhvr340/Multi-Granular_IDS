@@ -1,0 +1,18 @@
+{
+  "input": "D:\\Multi-Granular IDS\\Multi-Granular_IDS\\synthetic_cicids2018_validation.csv",
+  "window_seconds": 30,
+  "architecture": "flow_ml + time_window_ml -> evidence_fusion -> Gemini_decision",
+  "windows_scored": 720,
+  "windows_flagged": 0,
+  "alerts": [],
+  "final_decision": {
+    "action": "ALLOW",
+    "reason": "No ML model detected an attack",
+    "attack_labels": [],
+    "model_basis": []
+  },
+  "llm_report": {
+    "status": "skipped",
+    "reason": "No ML attack was detected"
+  }
+}

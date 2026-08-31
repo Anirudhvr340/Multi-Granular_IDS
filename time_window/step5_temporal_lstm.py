@@ -12,7 +12,8 @@ REPORT_DIR = os.path.join(os.path.dirname(__file__), "reports")
 MODEL_PATH = os.path.join(INPUT_DIR, "temporal_lstm.pth")
 SEQUENCE_LENGTH = 12
 BATCH_SIZE = 512
-EPOCHS = 8
+EPOCHS = 30
+PATIENCE = 3
 
 
 class WindowSequenceDataset(Dataset):
@@ -45,10 +46,11 @@ class TemporalLSTM(nn.Module):
             hidden_size=hidden_size,
             num_layers=2,
             batch_first=True,
-            dropout=0.2,
+            dropout=0.3,
         )
         self.classifier = nn.Sequential(
             nn.LayerNorm(hidden_size),
+            nn.Dropout(0.3),
             nn.Linear(hidden_size, num_classes),
         )
 
@@ -73,10 +75,17 @@ def main():
     labels = labels[order]
     times = times[order]
 
+    # Add lag features matching step1_split
+    from step1_split import add_lag_features
+    feature_names = np.load(os.path.join(INPUT_DIR, "window_feature_names.npy"), allow_pickle=True).astype(str)
+    # Exclude lag feature names if already in file
+    base_names = [n for n in feature_names if not n.startswith(("previous_", "delta_"))]
+    features_lagged, _ = add_lag_features(features, times, np.array(base_names, dtype=object))
+
     train_end_indices = np.load(os.path.join(INPUT_DIR, "train_indices.npy"))
     test_end_indices = np.load(os.path.join(INPUT_DIR, "test_indices.npy"))
     scaler = joblib.load(os.path.join(INPUT_DIR, "time_window_scaler.joblib"))
-    features = scaler.transform(features).astype(np.float32)
+    features = scaler.transform(features_lagged).astype(np.float32)
     days = times.astype("datetime64[D]")
     valid_sequence_endpoints = np.array([
         end >= SEQUENCE_LENGTH - 1 and len(set(days[end - SEQUENCE_LENGTH + 1 : end + 1])) == 1
@@ -96,21 +105,30 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     counts = np.bincount(labels[train_end_indices], minlength=len(class_names)).astype(np.float32)
-    weights = np.zeros(len(class_names), dtype=np.float32)
+    weights = np.ones(len(class_names), dtype=np.float32)
     present = counts > 0
-    weights[present] = len(train_end_indices) / (len(class_names) * counts[present])
+    weights[present] = np.clip(len(train_end_indices) / (len(class_names) * counts[present]), 0.1, 10.0)
     criterion = nn.CrossEntropyLoss(weight=torch.tensor(weights, device=device))
+    val_criterion = nn.CrossEntropyLoss()
     model = TemporalLSTM(features.shape[1], 96, len(class_names)).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode="min", patience=2, factor=0.5
+    )
 
     print(f"Temporal order: {times[0]} to {times[-1]}")
-    print("Split: stratified random windows from step1")
-    print(f"Lookback: {SEQUENCE_LENGTH} windows ({SEQUENCE_LENGTH * 5} seconds)")
+    print("Split: day-based temporal split from step1")
+    print(f"Lookback: {SEQUENCE_LENGTH} windows")
     print(f"Train sequences: {len(train_dataset)}")
     print(f"Test sequences: {len(test_dataset)}")
     print(f"Device: {device}")
 
+    best_val_loss = float("inf")
+    best_state = None
+    epochs_without_improvement = 0
+
     for epoch in range(EPOCHS):
+        # --- Training ---
         model.train()
         total_loss = 0.0
         for batch_features, batch_labels in train_loader:
@@ -119,9 +137,44 @@ def main():
             optimizer.zero_grad()
             loss = criterion(model(batch_features), batch_labels)
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
             total_loss += loss.item() * len(batch_labels)
-        print(f"Epoch {epoch + 1}/{EPOCHS} loss={total_loss / len(train_dataset):.4f}")
+        train_loss = total_loss / len(train_dataset)
+
+        # --- Validation ---
+        model.eval()
+        val_loss = 0.0
+        with torch.no_grad():
+            for batch_features, batch_labels in test_loader:
+                batch_features = batch_features.to(device)
+                batch_labels = batch_labels.to(device)
+                loss = val_criterion(model(batch_features), batch_labels)
+                val_loss += loss.item() * len(batch_labels)
+        val_loss /= max(len(test_dataset), 1)
+        scheduler.step(val_loss)
+
+        print(
+            f"Epoch {epoch + 1}/{EPOCHS}  "
+            f"train_loss={train_loss:.4f}  val_loss={val_loss:.4f}  "
+            f"lr={optimizer.param_groups[0]['lr']:.6f}"
+        )
+
+        # --- Early stopping ---
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
+            epochs_without_improvement = 0
+        else:
+            epochs_without_improvement += 1
+            if epochs_without_improvement >= PATIENCE:
+                print(f"Early stopping at epoch {epoch + 1} (no improvement for {PATIENCE} epochs)")
+                break
+
+    # Restore best weights
+    if best_state is not None:
+        model.load_state_dict(best_state)
+        model.to(device)
 
     model.eval()
     predictions = []

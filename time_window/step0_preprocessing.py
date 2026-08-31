@@ -1,4 +1,4 @@
-﻿import warnings
+import warnings
 warnings.filterwarnings("ignore")
 import os
 import glob
@@ -11,7 +11,7 @@ from sklearn.preprocessing import LabelEncoder
 # CONFIG
 # ==============================
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-DATA_PATTERN = os.path.join(ROOT_DIR, "*.csv")
+DATA_PATTERN = os.path.join(ROOT_DIR, "0*-*-2018.csv")
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "processed")
 
 WINDOW_SECONDS = int(os.environ.get("WINDOW_SECONDS", "5"))
@@ -126,8 +126,13 @@ def window_aggregate(window_df, window_start):
     label_counts = window_df["Label"].value_counts()
     attack_count = int((window_df["Label"] != "Benign").sum())
     attack_labels = window_df.loc[window_df["Label"] != "Benign", "Label"].value_counts()
-    # A minority attack must not disappear because benign flows share its window.
-    majority_label = attack_labels.idxmax() if len(attack_labels) else "Benign"
+    # Require a meaningful attack ratio to avoid labeling benign-dominant windows
+    # as attacks due to a single stray flow.  Threshold: >= 10 % of flows.
+    attack_ratio_in_window = attack_count / max(len(window_df), 1)
+    if len(attack_labels) and attack_ratio_in_window >= 0.10:
+        majority_label = attack_labels.idxmax()
+    else:
+        majority_label = "Benign"
 
     return {
         "window_start": window_start,
@@ -228,32 +233,36 @@ def main():
     for file in files:
         print(f"\nLoading file: {file}")
         file_chunks = []
-        reader = pd.read_csv(
-            file,
-            usecols=USECOLS,
-            dtype=str,
-            chunksize=CHUNK_SIZE,
-            nrows=MAX_ROWS_PER_FILE,
-            low_memory=False,
-            na_values=["", "NA", "NaN", "nan", "?"],
-        )
+        try:
+            reader = pd.read_csv(
+                file,
+                usecols=USECOLS,
+                dtype=str,
+                chunksize=CHUNK_SIZE,
+                nrows=MAX_ROWS_PER_FILE,
+                low_memory=False,
+                na_values=["", "NA", "NaN", "nan", "?"],
+            )
 
-        total_rows = 0
-        for chunk in reader:
-            chunk = clean_chunk(chunk)
-            total_rows += len(chunk)
-            if not chunk.empty:
-                file_chunks.append(chunk)
-        print(f"    Rows processed: {total_rows}")
-        if file_chunks:
-            # Files are separate calendar days, so no window can cross files.
-            combined = pd.concat(file_chunks, ignore_index=True)
-            combined = combined.sort_values("Timestamp").reset_index(drop=True)
-            combined["window_start"] = combined["Timestamp"].dt.floor(f"{WINDOW_SECONDS}s")
-            for window_start, window_df in combined.groupby("window_start", sort=True):
-                window_rows.append(window_aggregate(window_df, window_start))
-            del file_chunks, combined
-            gc.collect()
+            total_rows = 0
+            for chunk in reader:
+                chunk = clean_chunk(chunk)
+                total_rows += len(chunk)
+                if not chunk.empty:
+                    file_chunks.append(chunk)
+            print(f"    Rows processed: {total_rows}")
+            if file_chunks:
+                # Files are separate calendar days, so no window can cross files.
+                combined = pd.concat(file_chunks, ignore_index=True)
+                combined = combined.sort_values("Timestamp").reset_index(drop=True)
+                combined["window_start"] = combined["Timestamp"].dt.floor(f"{WINDOW_SECONDS}s")
+                for window_start, window_df in combined.groupby("window_start", sort=True):
+                    window_rows.append(window_aggregate(window_df, window_start))
+                del file_chunks, combined
+                gc.collect()
+        except Exception as err:
+            print(f"    Skipping file due to error: {err}")
+            continue
 
     if not window_rows:
         raise RuntimeError("No windows were generated. Check the CSV files and Timestamp parsing.")
@@ -263,11 +272,8 @@ def main():
 
     features_df = pd.DataFrame(window_rows)
     features_df = features_df.sort_values("window_start").reset_index(drop=True)
-    day_groups = features_df["window_start"].dt.normalize()
-    for column in ["total_flows", "total_packets", "total_bytes", "flow_rate", "packet_rate", "byte_rate"]:
-        previous = features_df.groupby(day_groups, sort=False)[column].shift(1)
-        features_df[f"previous_{column}"] = previous.fillna(features_df[column])
-        features_df[f"delta_{column}"] = (features_df[column] - previous).fillna(0.0)
+    # NOTE: Lag features (previous_*, delta_*) are computed in step1_split.py
+    # AFTER the train/test split to prevent temporal data leakage.
     # These are target-derived diagnostics, never model inputs.
     numeric_columns = [
         column for column in features_df.select_dtypes(include=[np.number]).columns

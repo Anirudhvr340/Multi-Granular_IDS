@@ -1,0 +1,605 @@
+{
+  "input": "D:\\Multi-Granular IDS\\Multi-Granular_IDS\\synthetic_cicids2018_validation.csv",
+  "window_seconds": 30,
+  "architecture": "flow_ml + time_window_ml -> evidence_fusion -> Gemini_decision",
+  "windows_scored": 720,
+  "windows_flagged": 9,
+  "alerts": [
+    {
+      "window_start": "2018-03-01 08:54:00",
+      "window_seconds": 30,
+      "flows": 10,
+      "flow_prediction": "Benign",
+      "window_prediction": "Benign",
+      "detected_attack": "DoS attacks-Slowloris",
+      "attack_label": "DoS attacks-Slowloris",
+      "flagged": true,
+      "confidence": 0.618079,
+      "flow_weight": 0.627358,
+      "window_weight": 0.372642,
+      "model_agreement": true,
+      "model_basis": [
+        {
+          "model_name": "Flow XGBoost",
+          "prediction": "Benign",
+          "prediction_confidence": 0.720025,
+          "attack_probability": 0.279975,
+          "support_for_detected_label": 0.720025,
+          "fusion_weight": 0.627358
+        },
+        {
+          "model_name": "Time-window XGBoost",
+          "prediction": "Benign",
+          "prediction_confidence": 0.44645,
+          "attack_probability": 0.55355,
+          "support_for_detected_label": 0.44645,
+          "fusion_weight": 0.372642
+        }
+      ],
+      "top_evidence": {
+        "flow_attack_probability": 0.2799749970436096,
+        "window_attack_probability": 0.5535500049591064,
+        "flow_density": 10000000.0,
+        "window_occupancy": 0.0,
+        "small_flow_ratio": 0.0,
+        "syn_no_ack_ratio": 0.0,
+        "flow_duration_p90": 28247.1
+      },
+      "top_scores": [
+        [
+          "Benign",
+          0.618079
+        ],
+        [
+          "DoS attacks-Slowloris",
+          0.159985
+        ],
+        [
+          "DDOS attack-LOIC-UDP",
+          0.097423
+        ],
+        [
+          "SSH-Bruteforce",
+          0.048556
+        ],
+        [
+          "Infilteration",
+          0.022897
+        ]
+      ]
+    },
+    {
+      "window_start": "2018-03-01 08:56:00",
+      "window_seconds": 30,
+      "flows": 10,
+      "flow_prediction": "Benign",
+      "window_prediction": "Benign",
+      "detected_attack": "DoS attacks-Slowloris",
+      "attack_label": "DoS attacks-Slowloris",
+      "flagged": true,
+      "confidence": 0.622441,
+      "flow_weight": 0.621569,
+      "window_weight": 0.378431,
+      "model_agreement": true,
+      "model_basis": [
+        {
+          "model_name": "Flow XGBoost",
+          "prediction": "Benign",
+          "prediction_confidence": 0.704066,
+          "attack_probability": 0.295934,
+          "support_for_detected_label": 0.704066,
+          "fusion_weight": 0.621569
+        },
+        {
+          "model_name": "Time-window XGBoost",
+          "prediction": "Benign",
+          "prediction_confidence": 0.488373,
+          "attack_probability": 0.511627,
+          "support_for_detected_label": 0.488373,
+          "fusion_weight": 0.378431
+        }
+      ],
+      "top_evidence": {
+        "flow_attack_probability": 0.2959339916706085,
+        "window_attack_probability": 0.5116270184516907,
+        "flow_density": 10000000.0,
+        "window_occupancy": 0.0,
+        "small_flow_ratio": 0.0,
+        "syn_no_ack_ratio": 0.0,
+        "flow_duration_p90": 18690.4
+      },
+      "top_scores": [
+        [
+          "Benign",
+          0.622441
+        ],
+        [
+          "DoS attacks-Slowloris",
+          0.158433
+        ],
+        [
+          "DDOS attack-LOIC-UDP",
+          0.096662
+        ],
+        [
+          "SSH-Bruteforce",
+          0.042229
+        ],
+        [
+          "Infilteration",
+          0.03092
+        ]
+      ]
+    },
+    {
+      "window_start": "2018-03-01 09:39:00",
+      "window_seconds": 30,
+      "flows": 9,
+      "flow_prediction": "Benign",
+      "window_prediction": "Benign",
+      "detected_attack": "DoS attacks-Slowloris",
+      "attack_label": "DoS attacks-Slowloris",
+      "flagged": true,
+      "confidence": 0.60817,
+      "flow_weight": 0.625729,
+      "window_weight": 0.374271,
+      "model_agreement": true,
+      "model_basis": [
+        {
+          "model_name": "Flow XGBoost",
+          "prediction": "Benign",
+          "prediction_confidence": 0.704464,
+          "attack_probability": 0.295536,
+          "support_for_detected_label": 0.704464,
+          "fusion_weight": 0.625729
+        },
+        {
+          "model_name": "Time-window XGBoost",
+          "prediction": "Benign",
+          "prediction_confidence": 0.447179,
+          "attack_probability": 0.552821,
+          "support_for_detected_label": 0.447179,
+          "fusion_weight": 0.374271
+        }
+      ],
+      "top_evidence": {
+        "flow_attack_probability": 0.29553601145744324,
+        "window_attack_probability": 0.5528209805488586,
+        "flow_density": 9000000.0,
+        "window_occupancy": 0.0,
+        "small_flow_ratio": 0.0,
+        "syn_no_ack_ratio": 0.0,
+        "flow_duration_p90": 154862.8
+      },
+      "top_scores": [
+        [
+          "Benign",
+          0.60817
+        ],
+        [
+          "DoS attacks-Slowloris",
+          0.15604
+        ],
+        [
+          "DDOS attack-LOIC-UDP",
+          0.113288
+        ],
+        [
+          "SSH-Bruteforce",
+          0.049478
+        ],
+        [
+          "FTP-BruteForce",
+          0.018668
+        ]
+      ]
+    },
+    {
+      "window_start": "2018-03-01 11:34:00",
+      "window_seconds": 30,
+      "flows": 4,
+      "flow_prediction": "Benign",
+      "window_prediction": "Benign",
+      "detected_attack": "DoS attacks-Slowloris",
+      "attack_label": "DoS attacks-Slowloris",
+      "flagged": true,
+      "confidence": 0.573611,
+      "flow_weight": 0.602412,
+      "window_weight": 0.397588,
+      "model_agreement": true,
+      "model_basis": [
+        {
+          "model_name": "Flow XGBoost",
+          "prediction": "Benign",
+          "prediction_confidence": 0.583202,
+          "attack_probability": 0.416798,
+          "support_for_detected_label": 0.583202,
+          "fusion_weight": 0.602412
+        },
+        {
+          "model_name": "Time-window XGBoost",
+          "prediction": "Benign",
+          "prediction_confidence": 0.559081,
+          "attack_probability": 0.440919,
+          "support_for_detected_label": 0.559081,
+          "fusion_weight": 0.397588
+        }
+      ],
+      "top_evidence": {
+        "flow_attack_probability": 0.4167979955673218,
+        "window_attack_probability": 0.44091901183128357,
+        "flow_density": 4000000.0,
+        "window_occupancy": 0.0,
+        "small_flow_ratio": 0.0,
+        "syn_no_ack_ratio": 0.0,
+        "flow_duration_p90": 2450.2
+      },
+      "top_scores": [
+        [
+          "Benign",
+          0.573611
+        ],
+        [
+          "DoS attacks-Slowloris",
+          0.177566
+        ],
+        [
+          "DDOS attack-LOIC-UDP",
+          0.151132
+        ],
+        [
+          "SSH-Bruteforce",
+          0.033887
+        ],
+        [
+          "DoS attacks-SlowHTTPTest",
+          0.014273
+        ]
+      ]
+    },
+    {
+      "window_start": "2018-03-01 11:39:00",
+      "window_seconds": 30,
+      "flows": 10,
+      "flow_prediction": "Benign",
+      "window_prediction": "Benign",
+      "detected_attack": "DoS attacks-Slowloris",
+      "attack_label": "DoS attacks-Slowloris",
+      "flagged": true,
+      "confidence": 0.639798,
+      "flow_weight": 0.626605,
+      "window_weight": 0.373395,
+      "model_agreement": true,
+      "model_basis": [
+        {
+          "model_name": "Flow XGBoost",
+          "prediction": "Benign",
+          "prediction_confidence": 0.739138,
+          "attack_probability": 0.260862,
+          "support_for_detected_label": 0.739138,
+          "fusion_weight": 0.626605
+        },
+        {
+          "model_name": "Time-window XGBoost",
+          "prediction": "Benign",
+          "prediction_confidence": 0.473092,
+          "attack_probability": 0.526908,
+          "support_for_detected_label": 0.473092,
+          "fusion_weight": 0.373395
+        }
+      ],
+      "top_evidence": {
+        "flow_attack_probability": 0.26086199283599854,
+        "window_attack_probability": 0.5269079804420471,
+        "flow_density": 10000000.0,
+        "window_occupancy": 0.0,
+        "small_flow_ratio": 0.0,
+        "syn_no_ack_ratio": 0.0,
+        "flow_duration_p90": 153227.2
+      },
+      "top_scores": [
+        [
+          "Benign",
+          0.639798
+        ],
+        [
+          "DoS attacks-Slowloris",
+          0.152001
+        ],
+        [
+          "DDOS attack-LOIC-UDP",
+          0.09632
+        ],
+        [
+          "SSH-Bruteforce",
+          0.044208
+        ],
+        [
+          "FTP-BruteForce",
+          0.016437
+        ]
+      ]
+    },
+    {
+      "window_start": "2018-03-01 14:48:00",
+      "window_seconds": 30,
+      "flows": 12,
+      "flow_prediction": "Benign",
+      "window_prediction": "Benign",
+      "detected_attack": "DoS attacks-Slowloris",
+      "attack_label": "DoS attacks-Slowloris",
+      "flagged": true,
+      "confidence": 0.618032,
+      "flow_weight": 0.626565,
+      "window_weight": 0.373435,
+      "model_agreement": true,
+      "model_basis": [
+        {
+          "model_name": "Flow XGBoost",
+          "prediction": "Benign",
+          "prediction_confidence": 0.717233,
+          "attack_probability": 0.282767,
+          "support_for_detected_label": 0.717233,
+          "fusion_weight": 0.626565
+        },
+        {
+          "model_name": "Time-window XGBoost",
+          "prediction": "Benign",
+          "prediction_confidence": 0.451588,
+          "attack_probability": 0.548412,
+          "support_for_detected_label": 0.451588,
+          "fusion_weight": 0.373435
+        }
+      ],
+      "top_evidence": {
+        "flow_attack_probability": 0.28276699781417847,
+        "window_attack_probability": 0.548412024974823,
+        "flow_density": 12000000.0,
+        "window_occupancy": 0.0,
+        "small_flow_ratio": 0.0,
+        "syn_no_ack_ratio": 0.0,
+        "flow_duration_p90": 36133.6
+      },
+      "top_scores": [
+        [
+          "Benign",
+          0.618032
+        ],
+        [
+          "DoS attacks-Slowloris",
+          0.141362
+        ],
+        [
+          "DDOS attack-LOIC-UDP",
+          0.119701
+        ],
+        [
+          "SSH-Bruteforce",
+          0.049404
+        ],
+        [
+          "FTP-BruteForce",
+          0.016365
+        ]
+      ]
+    },
+    {
+      "window_start": "2018-03-01 15:20:00",
+      "window_seconds": 30,
+      "flows": 5,
+      "flow_prediction": "Benign",
+      "window_prediction": "Benign",
+      "detected_attack": "DoS attacks-Slowloris",
+      "attack_label": "DoS attacks-Slowloris",
+      "flagged": true,
+      "confidence": 0.607174,
+      "flow_weight": 0.610936,
+      "window_weight": 0.389064,
+      "model_agreement": true,
+      "model_basis": [
+        {
+          "model_name": "Flow XGBoost",
+          "prediction": "Benign",
+          "prediction_confidence": 0.649722,
+          "attack_probability": 0.350278,
+          "support_for_detected_label": 0.649722,
+          "fusion_weight": 0.610936
+        },
+        {
+          "model_name": "Time-window XGBoost",
+          "prediction": "Benign",
+          "prediction_confidence": 0.540361,
+          "attack_probability": 0.459639,
+          "support_for_detected_label": 0.540361,
+          "fusion_weight": 0.389064
+        }
+      ],
+      "top_evidence": {
+        "flow_attack_probability": 0.35027799010276794,
+        "window_attack_probability": 0.4596399962902069,
+        "flow_density": 5000000.0,
+        "window_occupancy": 0.0,
+        "small_flow_ratio": 0.0,
+        "syn_no_ack_ratio": 0.0,
+        "flow_duration_p90": 124244.8
+      },
+      "top_scores": [
+        [
+          "Benign",
+          0.607174
+        ],
+        [
+          "DoS attacks-Slowloris",
+          0.168063
+        ],
+        [
+          "DDOS attack-LOIC-UDP",
+          0.128174
+        ],
+        [
+          "SSH-Bruteforce",
+          0.037172
+        ],
+        [
+          "FTP-BruteForce",
+          0.014404
+        ]
+      ]
+    },
+    {
+      "window_start": "2018-03-01 16:08:00",
+      "window_seconds": 30,
+      "flows": 7,
+      "flow_prediction": "Benign",
+      "window_prediction": "Benign",
+      "detected_attack": "DoS attacks-Slowloris",
+      "attack_label": "DoS attacks-Slowloris",
+      "flagged": true,
+      "confidence": 0.584778,
+      "flow_weight": 0.600721,
+      "window_weight": 0.399279,
+      "model_agreement": true,
+      "model_basis": [
+        {
+          "model_name": "Flow XGBoost",
+          "prediction": "Benign",
+          "prediction_confidence": 0.587657,
+          "attack_probability": 0.412343,
+          "support_for_detected_label": 0.587657,
+          "fusion_weight": 0.600721
+        },
+        {
+          "model_name": "Time-window XGBoost",
+          "prediction": "Benign",
+          "prediction_confidence": 0.580447,
+          "attack_probability": 0.419553,
+          "support_for_detected_label": 0.580447,
+          "fusion_weight": 0.399279
+        }
+      ],
+      "top_evidence": {
+        "flow_attack_probability": 0.41234299540519714,
+        "window_attack_probability": 0.4195530116558075,
+        "flow_density": 7000000.0,
+        "window_occupancy": 0.0,
+        "small_flow_ratio": 0.0,
+        "syn_no_ack_ratio": 0.0,
+        "flow_duration_p90": 493367.0
+      },
+      "top_scores": [
+        [
+          "Benign",
+          0.584778
+        ],
+        [
+          "DoS attacks-Slowloris",
+          0.13913
+        ],
+        [
+          "DDOS attack-LOIC-UDP",
+          0.08646
+        ],
+        [
+          "DDOS attack-HOIC",
+          0.069717
+        ],
+        [
+          "SSH-Bruteforce",
+          0.046392
+        ]
+      ]
+    },
+    {
+      "window_start": "2018-03-01 18:05:00",
+      "window_seconds": 30,
+      "flows": 14,
+      "flow_prediction": "Benign",
+      "window_prediction": "Benign",
+      "detected_attack": "DoS attacks-Slowloris",
+      "attack_label": "DoS attacks-Slowloris",
+      "flagged": true,
+      "confidence": 0.633158,
+      "flow_weight": 0.627566,
+      "window_weight": 0.372434,
+      "model_agreement": true,
+      "model_basis": [
+        {
+          "model_name": "Flow XGBoost",
+          "prediction": "Benign",
+          "prediction_confidence": 0.735825,
+          "attack_probability": 0.264175,
+          "support_for_detected_label": 0.735825,
+          "fusion_weight": 0.627566
+        },
+        {
+          "model_name": "Time-window XGBoost",
+          "prediction": "Benign",
+          "prediction_confidence": 0.46016,
+          "attack_probability": 0.53984,
+          "support_for_detected_label": 0.46016,
+          "fusion_weight": 0.372434
+        }
+      ],
+      "top_evidence": {
+        "flow_attack_probability": 0.2641749978065491,
+        "window_attack_probability": 0.5398399829864502,
+        "flow_density": 14000000.0,
+        "window_occupancy": 0.0,
+        "small_flow_ratio": 0.0,
+        "syn_no_ack_ratio": 0.0,
+        "flow_duration_p90": 93678.8
+      },
+      "top_scores": [
+        [
+          "Benign",
+          0.633158
+        ],
+        [
+          "DoS attacks-Slowloris",
+          0.155196
+        ],
+        [
+          "DDOS attack-LOIC-UDP",
+          0.09259
+        ],
+        [
+          "SSH-Bruteforce",
+          0.043349
+        ],
+        [
+          "Infilteration",
+          0.018688
+        ]
+      ]
+    }
+  ],
+  "llm_report": {
+    "status": "ok",
+    "report": {
+      "action": "ALERT",
+      "attack_types": [
+        "DoS attacks-Slowloris"
+      ],
+      "priority": "Medium",
+      "explanation": "Multiple instances of 'DoS attacks-Slowloris' were detected and flagged across several time windows. While the primary models show higher confidence in benign traffic, the repeated flagging of this specific attack type, even at lower confidence, warrants further investigation.",
+      "recommended_actions": "Investigate the flagged network traffic for characteristics of Slowloris DoS attacks. Review system logs for anomalies on potentially affected hosts. Consider monitoring network activity closely for escalation.",
+      "attack_labels": [
+        "DoS attacks-Slowloris"
+      ],
+      "model_basis": "See model_basis on each alert"
+    }
+  },
+  "final_decision": {
+    "action": "ALERT",
+    "attack_types": [
+      "DoS attacks-Slowloris"
+    ],
+    "priority": "Medium",
+    "explanation": "Multiple instances of 'DoS attacks-Slowloris' were detected and flagged across several time windows. While the primary models show higher confidence in benign traffic, the repeated flagging of this specific attack type, even at lower confidence, warrants further investigation.",
+    "recommended_actions": "Investigate the flagged network traffic for characteristics of Slowloris DoS attacks. Review system logs for anomalies on potentially affected hosts. Consider monitoring network activity closely for escalation.",
+    "attack_labels": [
+      "DoS attacks-Slowloris"
+    ],
+    "model_basis": "See model_basis on each alert"
+  }
+}

@@ -1,10 +1,12 @@
-Accuracy: 0.6060
-Macro F1: 0.0846
+Accuracy: 0.5589
+Macro F1: 0.1679
 
                           precision    recall  f1-score   support
 
-                  Benign     0.6152    0.9973    0.7610      7916
-                     Bot     0.0000    0.0000    0.0000      3554
+                  Benign     0.7507    0.8612    0.8021      7118
+                     Bot     0.0000    0.0000    0.0000      4065
+        Brute Force -Web     0.0000    0.0000    0.0000         0
+        Brute Force -XSS     0.0000    0.0000    0.0000         0
         DDOS attack-HOIC     0.0000    0.0000    0.0000         0
     DDOS attack-LOIC-UDP     0.0000    0.0000    0.0000         0
   DDoS attacks-LOIC-HTTP     0.0000    0.0000    0.0000         0
@@ -13,9 +15,9 @@ Macro F1: 0.0846
 DoS attacks-SlowHTTPTest     0.0000    0.0000    0.0000         0
    DoS attacks-Slowloris     0.0000    0.0000    0.0000         0
           FTP-BruteForce     0.0000    0.0000    0.0000         0
-           Infilteration     0.0000    0.0000    0.0000      1558
+           Infilteration     0.2659    0.6244    0.3730      1845
           SSH-Bruteforce     0.0000    0.0000    0.0000         0
 
-                accuracy                         0.6060     13028
-               macro avg     0.0513    0.0831    0.0634     13028
-            weighted avg     0.3738    0.6060    0.4624     13028
+                accuracy                         0.5589     13028
+               macro avg     0.0726    0.1061    0.0839     13028
+            weighted avg     0.4478    0.5589    0.4911     13028
