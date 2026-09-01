@@ -1,0 +1,3 @@
+Model comparison (SEQUENCE_LENGTH=60)
+LSTM   - Accuracy: 0.4691, Macro F1: 0.1169
+TCN    - Accuracy: 0.4250, Macro F1: 0.1593
