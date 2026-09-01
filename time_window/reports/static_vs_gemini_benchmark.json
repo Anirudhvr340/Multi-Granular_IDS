@@ -1,0 +1,60 @@
+{
+  "dataset": "D:\\Multi-Granular IDS\\Multi-Granular_IDS\\realistic_synthetic_cicids2018_converted.csv",
+  "windows_scored": 2880,
+  "windows_flagged": 1837,
+  "ground_truth_distribution": {
+    "Benign": 2704,
+    "DoS attacks-Hulk": 120,
+    "DoS attacks-Slowloris": 52,
+    "Infilteration": 4
+  },
+  "static_fusion_methods": {
+    "Kittler Weighted Sum (1998)": {
+      "accuracy": 65.45,
+      "precision": 92.45,
+      "recall": 65.45,
+      "f1_weighted": 76.64,
+      "windows_flagged": 966,
+      "detection_rate": 33.54
+    },
+    "Dasarathy Max-Confidence (1997)": {
+      "accuracy": 82.88,
+      "precision": 92.23,
+      "recall": 82.88,
+      "f1_weighted": 87.31,
+      "windows_flagged": 450,
+      "detection_rate": 15.62
+    },
+    "Peddabachigari Priority Cascade (2007)": {
+      "accuracy": 25.8,
+      "precision": 92.42,
+      "recall": 25.8,
+      "f1_weighted": 40.29,
+      "windows_flagged": 2127,
+      "detection_rate": 73.85
+    },
+    "Kittler Majority Vote (1998)": {
+      "accuracy": 26.74,
+      "precision": 92.12,
+      "recall": 26.74,
+      "f1_weighted": 41.4,
+      "windows_flagged": 2097,
+      "detection_rate": 72.81
+    }
+  },
+  "gemini_dynamic_integration": {
+    "final_action": "BLOCK",
+    "priority": "Critical",
+    "attack_types": [
+      "DDOS attack-LOIC-UDP",
+      "DDOS attack-HOIC",
+      "DDoS attacks-LOIC-HTTP",
+      "DoS attacks-GoldenEye",
+      "DoS attacks-Hulk",
+      "Bot",
+      "FTP-BruteForce"
+    ],
+    "windows_flagged": 1837,
+    "detection_rate": 63.78
+  }
+}
