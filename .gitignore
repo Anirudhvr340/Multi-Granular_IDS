@@ -1,6 +1,13 @@
-# Ignore CSV data files
+# Ignore CSV and heavy binary data files
 *.csv
 *.npy
+*.pcap
+*.parquet
+
+# Datasets and captures
+cicids2023/
+time_window/cicids2017/
+multi_day_validation.pcap
 
 # Numpy arrays
 time_window/*.npy
@@ -13,6 +20,14 @@ time_window/processed/*.npy
 
 # Processed outputs
 time_window/processed/
+
+# Generated execution logs and heavy outputs
+nids/decisions/
+nids/validation_results/*.json
+reports/decision_*.json
+reports/*.csv
+reports/*.jsonl
+nids_pipeline_report.json
 
 # Python cache
 __pycache__/

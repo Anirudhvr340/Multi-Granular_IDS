@@ -1,0 +1,10 @@
+{
+  "pcap_name": "UCAP172.31.69.25",
+  "pcap_sha256_head": "f25c309acdbd00f9cf2473f5dba27a4690b9060649a9053c9aa09f36c7d331a5",
+  "timestamp": "2026-10-13T01:30:28.777335",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "python_version": "3.13.14 (tags/v3.13.14:fd17997, Jun 10 2026, 13:03:48) [MSC v.1944 64 bit (AMD64)]",
+  "active_branch": "all",
+  "window_seconds": 30,
+  "elapsed_seconds": 5.17
+}

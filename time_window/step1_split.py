@@ -2,6 +2,7 @@ import os
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from joblib import dump
+from temporal_features import build_temporal_features, fit_temporal_config
 
 INPUT_DIR = os.path.join(os.path.dirname(__file__), "processed")
 TRAIN_RATIO = 0.8
@@ -63,9 +64,9 @@ def main():
     X = np.load(os.path.join(INPUT_DIR, "window_features.npy"))
     y = np.load(os.path.join(INPUT_DIR, "window_multiclass_labels.npy"))
     times = np.load(os.path.join(INPUT_DIR, "window_times.npy"))
-    feature_names = np.load(
-        os.path.join(INPUT_DIR, "window_feature_names.npy"), allow_pickle=True
-    ).astype(str)
+    base_feature_path = os.path.join(INPUT_DIR, "window_base_feature_names.npy")
+    feature_name_path = base_feature_path if os.path.exists(base_feature_path) else os.path.join(INPUT_DIR, "window_feature_names.npy")
+    feature_names = np.load(feature_name_path, allow_pickle=True).astype(str)
     X = np.nan_to_num(X, nan=0.0, posinf=0.0, neginf=0.0)
 
     # ----------------------------------------------------------------
@@ -113,10 +114,12 @@ def main():
     # COMPUTE LAG FEATURES WITHIN EACH SPLIT INDEPENDENTLY
     # This prevents test-set lag values from leaking into training data.
     # ----------------------------------------------------------------
-    X_train_lagged, feature_names_lagged = add_lag_features(
-        X_train_raw, times_train, feature_names
+    temporal_config = fit_temporal_config(X, feature_names, train_indices)
+    X_temporal, feature_names_temporal = build_temporal_features(
+        X, times, feature_names, temporal_config
     )
-    X_test_lagged, _ = add_lag_features(X_test_raw, times_test, feature_names)
+    X_train_lagged = X_temporal[train_indices]
+    X_test_lagged = X_temporal[test_indices]
 
     # ----------------------------------------------------------------
     # SCALE FEATURES (fit on training data only)
@@ -143,9 +146,10 @@ def main():
     np.save(os.path.join(INPUT_DIR, "window_times_test.npy"), times_test)
     np.save(os.path.join(INPUT_DIR, "train_indices.npy"), train_indices)
     np.save(os.path.join(INPUT_DIR, "test_indices.npy"), test_indices)
-    np.save(os.path.join(INPUT_DIR, "window_feature_names.npy"), feature_names_lagged)
+    np.save(os.path.join(INPUT_DIR, "window_feature_names.npy"), feature_names_temporal)
 
     dump(scaler, os.path.join(INPUT_DIR, "time_window_scaler.joblib"))
+    dump(temporal_config, os.path.join(INPUT_DIR, "temporal_feature_config.joblib"))
 
     print("\n[OK] Day-based temporal split completed successfully!")
 

@@ -31,16 +31,29 @@ def load_artifacts():
     window_model = joblib.load(PROCESSED / "xgb_time_window_model.joblib")
     window_labels = np.load(PROCESSED / "window_class_names.npy", allow_pickle=True).astype(str)
     window_features = np.load(PROCESSED / "window_feature_names.npy", allow_pickle=True).astype(str)
+    base_path = PROCESSED / "window_base_feature_names.npy"
+    base_window_features = np.load(base_path, allow_pickle=True).astype(str) if base_path.exists() else window_features
+    selected_path = PROCESSED / "window_model_feature_names.npy"
+    if selected_path.exists():
+        window_model_features = np.load(selected_path, allow_pickle=True).astype(str)
+    else:
+        window_model_features = window_features
     scaler = joblib.load(PROCESSED / "time_window_scaler.joblib")
-    return flow_model, flow_features, flow_labels, window_model, window_labels, window_features, scaler
+    config_path = PROCESSED / "temporal_feature_config.joblib"
+    temporal_config = joblib.load(config_path) if config_path.exists() else None
+    return (flow_model, flow_features, flow_labels, window_model, window_labels,
+        window_features, base_window_features, window_model_features, scaler, temporal_config)
 
 
 def score_file(input_path, window_seconds):
     os.environ["WINDOW_SECONDS"] = str(window_seconds)
     from time_window import step0_preprocessing as preprocessing
+    from time_window.temporal_features import build_temporal_features, fit_temporal_config
 
     artifacts = load_artifacts()
-    flow_model, flow_features, flow_labels, window_model, window_labels, window_feature_names, scaler = artifacts
+    (flow_model, flow_features, flow_labels, window_model, window_labels,
+     window_feature_names, base_window_features, window_model_features,
+     scaler, temporal_config) = artifacts
     frame = pd.read_csv(input_path, low_memory=False)
 
     required_cols = ["Timestamp", "Label", "Dst Port", "Protocol", "Tot Fwd Pkts", "Tot Bwd Pkts", "Flow Duration"]
@@ -57,6 +70,7 @@ def score_file(input_path, window_seconds):
         raise ValueError("The input contains no valid 2018 flow records.")
     frame["window_start"] = frame["Timestamp"].dt.floor(f"{window_seconds}s")
     rows = []
+    temporal_history = []
     previous_by_day = {}
     for window_start, window in frame.groupby("window_start", sort=True):
         aggregate = preprocessing.window_aggregate(window, window_start)
@@ -108,8 +122,18 @@ def score_file(input_path, window_seconds):
         else:
             flow_distribution = {"Benign": 1.0}
 
-        window_vector = pd.DataFrame([aggregate]).reindex(columns=window_feature_names).fillna(0.0)
-        window_probability = window_model.predict_proba(scaler.transform(window_vector))[0]
+        base_vector = pd.DataFrame([aggregate]).reindex(columns=base_window_features).fillna(0.0).to_numpy(dtype=np.float32)
+        temporal_history.append(base_vector[0])
+        history_matrix = np.asarray(temporal_history[-5:], dtype=np.float32)
+        active_config = temporal_config or fit_temporal_config(history_matrix, base_window_features)
+        temporal_vector, generated_names = build_temporal_features(
+            history_matrix, np.arange(len(history_matrix)), base_window_features, active_config
+        )
+        window_vector = pd.DataFrame([temporal_vector[-1]], columns=generated_names)
+        window_vector = window_vector.reindex(columns=window_feature_names).fillna(0.0)
+        scaled_window = scaler.transform(window_vector)
+        selected_indices = [window_feature_names.tolist().index(name) for name in window_model_features]
+        window_probability = window_model.predict_proba(scaled_window[:, selected_indices])[0]
         window_distribution = dict(zip(window_labels[window_model.classes_.astype(int)], window_probability))
 
         common = sorted(set(flow_distribution) & set(window_distribution))
@@ -217,7 +241,7 @@ def gemini_summary(alerts):
         )}]}],
         "generationConfig": {"responseMimeType": "application/json", "temperature": 0.1},
     }
-    model = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+    model = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash")
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
     request = urllib.request.Request(
         url,

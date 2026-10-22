@@ -63,8 +63,9 @@ def clean_chunk(chunk):
 
     numeric_cols = get_numeric_columns(chunk)
     for col in numeric_cols:
-        chunk[col] = pd.to_numeric(chunk[col], errors="coerce")
-    chunk[numeric_cols] = chunk[numeric_cols].replace([np.inf, -np.inf], np.nan).fillna(0.0)
+        values = pd.to_numeric(chunk[col], errors="coerce").to_numpy(dtype=np.float32)
+        values = np.nan_to_num(values, nan=0.0, posinf=0.0, neginf=0.0)
+        chunk[col] = values
     return chunk
 
 
@@ -298,6 +299,7 @@ def main():
     np.save(os.path.join(OUTPUT_DIR, "window_multiclass_labels.npy"), features_df["majority_label_encoded"].to_numpy(dtype=np.int64))
     np.save(os.path.join(OUTPUT_DIR, "window_times.npy"), features_df["window_start"].to_numpy(dtype="datetime64[ns]"))
     np.save(os.path.join(OUTPUT_DIR, "window_feature_names.npy"), np.array(numeric_columns, dtype=object))
+    np.save(os.path.join(OUTPUT_DIR, "window_base_feature_names.npy"), np.array(numeric_columns, dtype=object))
 
     print("\nStep 0 COMPLETED: window features saved to processed/")
 

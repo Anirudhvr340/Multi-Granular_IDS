@@ -1,0 +1,27 @@
+{
+  "pcap_file": "UCAP172.31.69.25",
+  "windows_count": 10,
+  "flows_count": 2012,
+  "model_stats": {
+    "packet": {
+      "invoked": 10,
+      "success": 10,
+      "errors": 0
+    },
+    "flow": {
+      "invoked": 10,
+      "success": 10,
+      "errors": 0
+    },
+    "time_window": {
+      "invoked": 10,
+      "success": 10,
+      "errors": 0
+    },
+    "session": {
+      "invoked": 10,
+      "success": 10,
+      "errors": 0
+    }
+  }
+}
