@@ -1,0 +1,158 @@
+{
+  "dataset": "ciciot2023/ciciot2023_converted_benchmark.csv",
+  "without_llm": {
+    "label": "without_llm",
+    "use_llm": false,
+    "total_windows": 150,
+    "total_attacks": 147,
+    "total_benign": 3,
+    "tp": 53,
+    "fp": 3,
+    "fn": 94,
+    "tn": 0,
+    "recall": 0.3605,
+    "precision": 0.9464,
+    "fpr": 1.0,
+    "f1": 0.5222,
+    "action_distribution": {
+      "ALLOW": 94,
+      "FLAG": 55,
+      "BLOCK": 1
+    },
+    "source_distribution": {
+      "heuristic": 121,
+      "rule": 29
+    },
+    "elapsed_seconds": 9.74,
+    "ms_per_window": 64.92,
+    "stats": {
+      "gemini_calls": 0,
+      "gemini_errors": 0,
+      "llm_calls": 0,
+      "llm_errors": 0,
+      "llm_model": "qwen2.5:7b",
+      "confusing_cases_dispatched": 0,
+      "deterministic_handled": 150
+    }
+  },
+  "with_qwen2.5_7b": {
+    "label": "with_qwen2.5_7b",
+    "use_llm": true,
+    "total_windows": 150,
+    "total_attacks": 147,
+    "total_benign": 3,
+    "tp": 147,
+    "fp": 3,
+    "fn": 0,
+    "tn": 0,
+    "recall": 1.0,
+    "precision": 0.98,
+    "fpr": 1.0,
+    "f1": 0.9899,
+    "action_distribution": {
+      "FLAG": 149,
+      "BLOCK": 1
+    },
+    "source_distribution": {
+      "qwen-2.5-7b": 121,
+      "rule": 29
+    },
+    "elapsed_seconds": 85.02,
+    "ms_per_window": 566.77,
+    "stats": {
+      "gemini_calls": 121,
+      "gemini_errors": 0,
+      "llm_calls": 121,
+      "llm_errors": 0,
+      "llm_model": "qwen2.5:7b",
+      "confusing_cases_dispatched": 121,
+      "deterministic_handled": 29
+    }
+  },
+  "comparison_table": [
+    [
+      "Total Windows Evaluated",
+      "150",
+      "150",
+      "Identical windows"
+    ],
+    [
+      "Total Attack Windows",
+      "147",
+      "147",
+      "\u2014"
+    ],
+    [
+      "Total Benign Windows",
+      "3",
+      "3",
+      "\u2014"
+    ],
+    [
+      "Attack Recall (Detection Rate)",
+      "36.05%",
+      "100.00%",
+      "+63.95%"
+    ],
+    [
+      "Detection Precision",
+      "94.64%",
+      "98.00%",
+      "+3.36%"
+    ],
+    [
+      "False Positive Rate (FPR)",
+      "100.00%",
+      "100.00%",
+      "+0.00%"
+    ],
+    [
+      "Detection F1-Score",
+      "52.22%",
+      "98.99%",
+      "+46.77%"
+    ],
+    [
+      "Action: ALLOW",
+      "94",
+      "0",
+      "-94"
+    ],
+    [
+      "Action: FLAG",
+      "55",
+      "149",
+      "+94"
+    ],
+    [
+      "Action: BLOCK",
+      "1",
+      "1",
+      "+0"
+    ],
+    [
+      "Confusing Dispatched to LLM",
+      "0",
+      "121",
+      "+121"
+    ],
+    [
+      "Deterministic Handled",
+      "150",
+      "29",
+      "Fast-path handled"
+    ],
+    [
+      "Elapsed Time (Total)",
+      "9.74s",
+      "85.02s",
+      "+75.28s"
+    ],
+    [
+      "Latency (per window)",
+      "64.9 ms",
+      "566.8 ms",
+      "Real-time edge rate"
+    ]
+  ]
+}

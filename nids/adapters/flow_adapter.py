@@ -96,8 +96,11 @@ class FlowModelAdapter(BaseAdapter):
 
         # Derive burstiness if missing
         if "burstiness" not in df.columns:
-            df["burstiness"] = 0.0
+            std = pd.to_numeric(df.get("Pkt Len Std", 0), errors="coerce").fillna(0)
+            mean = pd.to_numeric(df.get("Pkt Len Mean", 0), errors="coerce").fillna(0)
+            df["burstiness"] = std / (mean + 1.0)
 
+        df = df.replace([np.inf, -np.inf], np.nan)
         X = (
             df.reindex(columns=self._feature_names)
             .apply(pd.to_numeric, errors="coerce")
@@ -159,10 +162,8 @@ class FlowModelAdapter(BaseAdapter):
         # Density-aware window attack probability
         if n_flows <= 3:
             window_attack_prob = max_p if max_p >= 0.90 else mean_p
-        elif p90 >= 0.90 or frac_90 >= 0.10:
+        elif frac_50 >= 0.35 or mean_p >= 0.40 or (p95 >= 0.95 and frac_70 >= 0.20):
             window_attack_prob = max(p95, p90)
-        elif p95 >= 0.95 and frac_70 >= 0.15:
-            window_attack_prob = p90
         else:
             window_attack_prob = min(mean_p, 0.20)
 

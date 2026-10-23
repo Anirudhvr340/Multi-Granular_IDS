@@ -1,0 +1,163 @@
+{
+  "dataset": "cicids2018/cic.csv",
+  "total_time_seconds": 639.44,
+  "fused_metrics": {
+    "label": "4-Model Fused Probabilities",
+    "windows": 785,
+    "attacks": 356,
+    "benign": 429,
+    "tp": 37,
+    "fp": 55,
+    "fn": 319,
+    "tn": 374,
+    "recall": 0.1039,
+    "precision": 0.4022,
+    "fpr": 0.1282,
+    "f1": 0.1652,
+    "mean_fused_prob": 0.3945,
+    "mean_agreement": 0.2943,
+    "actions": {
+      "ALLOW": 693,
+      "FLAG": 92
+    },
+    "sources": {
+      "heuristic": 700,
+      "rule": 85
+    },
+    "per_class": {
+      "Benign": {
+        "windows": 429,
+        "detected": 55
+      },
+      "FTP-BruteForce": {
+        "windows": 356,
+        "detected": 37
+      }
+    }
+  },
+  "hybrid_metrics": {
+    "label": "Hybrid Qwen 2.5 7B",
+    "windows": 784,
+    "attacks": 355,
+    "benign": 429,
+    "tp": 355,
+    "fp": 429,
+    "fn": 0,
+    "tn": 0,
+    "recall": 1.0,
+    "precision": 0.4528,
+    "fpr": 1.0,
+    "f1": 0.6234,
+    "mean_fused_prob": 0.3946,
+    "mean_agreement": 0.2943,
+    "actions": {
+      "FLAG": 784
+    },
+    "sources": {
+      "qwen-2.5-7b": 699,
+      "rule": 85
+    },
+    "per_class": {
+      "Benign": {
+        "windows": 429,
+        "detected": 429
+      },
+      "FTP-BruteForce": {
+        "windows": 355,
+        "detected": 355
+      }
+    }
+  },
+  "comparison_table": [
+    [
+      "Total Windows Evaluated",
+      "785",
+      "784",
+      "Identical traffic"
+    ],
+    [
+      "Total Attack Windows",
+      "356",
+      "355",
+      "Ground truth"
+    ],
+    [
+      "Total Benign Windows",
+      "429",
+      "429",
+      "Ground truth"
+    ],
+    [
+      "Attack Recall (Detection Rate)",
+      "10.39%",
+      "100.00%",
+      "+89.61%"
+    ],
+    [
+      "Detection Precision",
+      "40.22%",
+      "45.28%",
+      "+5.06%"
+    ],
+    [
+      "False Positive Rate (FPR)",
+      "12.82%",
+      "100.00%",
+      "+87.18%"
+    ],
+    [
+      "Detection F1-Score",
+      "16.52%",
+      "62.34%",
+      "+45.82%"
+    ],
+    [
+      "Mean Fused P(attack)",
+      "0.3945",
+      "0.3946",
+      "Ensemble probability"
+    ],
+    [
+      "Mean Model Agreement",
+      "29.4%",
+      "29.4%",
+      "Ensemble consensus"
+    ],
+    [
+      "Action: ALLOW",
+      "693",
+      "0",
+      "-693"
+    ],
+    [
+      "Action: FLAG",
+      "92",
+      "784",
+      "+692"
+    ],
+    [
+      "Action: BLOCK",
+      "0",
+      "0",
+      "+0"
+    ],
+    [
+      "Ambiguous Dispatched to Qwen",
+      "0 (Bypassed)",
+      "700",
+      "+700 calls"
+    ],
+    [
+      "Deterministic Fast-Path Handled",
+      "785",
+      "85",
+      "0 ms LLM overhead"
+    ],
+    [
+      "Total Runtime",
+      "639.44s",
+      "639.44s",
+      "814.6 ms/window"
+    ]
+  ]
+}

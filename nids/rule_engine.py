@@ -168,6 +168,20 @@ class RuleEngine:
             and ev.model_agreement_score >= cfg.r1_min_agreement
             and ev.fused_attack_probability >= cfg.r1_min_prob
         ):
+            families = [
+                r.normalised_family for r in [ev.packet, ev.flow, ev.time_window, ev.session]
+                if r and r.is_attack and r.normalised_family
+            ]
+            if len(set(families)) > 1:
+                return RuleResult(
+                    action="FLAG",
+                    severity="HIGH",
+                    rule_name="R1_DISCORDANT_ATTACK",
+                    reason=(
+                        f"High-confidence attack detected across models, but conflicting families "
+                        f"{set(families)} observed. Flagging for analyst triage."
+                    ),
+                )
             return RuleResult(
                 action="BLOCK",
                 severity="CRITICAL",
@@ -205,6 +219,20 @@ class RuleEngine:
             and ev.fused_attack_probability >= cfg.r3_min_prob
         ):
             family = ev.fused_attack_family or "Unknown"
+            families = [
+                r.normalised_family for r in [ev.packet, ev.flow, ev.time_window, ev.session]
+                if r and r.is_attack and r.normalised_family
+            ]
+            if len(set(families)) > 1:
+                return RuleResult(
+                    action="FLAG",
+                    severity="HIGH",
+                    rule_name="R3_PERSISTENT_DISCORDANT",
+                    reason=(
+                        f"Persistent suspicious activity across {consecutive} windows, but attack families "
+                        f"{set(families)} are discordant. Flagging for analyst triage."
+                    ),
+                )
             return RuleResult(
                 action="BLOCK",
                 severity="HIGH",
@@ -251,14 +279,19 @@ class RuleEngine:
     def _rule5_allow_benign(self, ev: IntegratedEvidence) -> Optional[RuleResult]:
         """Fast-path ALLOW for very low attack probability."""
         cfg = self.config
-        if ev.fused_attack_probability <= cfg.r5_max_prob:
+        if (
+            ev.fused_attack_probability <= cfg.r5_max_prob
+            or (ev.models_indicating_attack == 0 and ev.fused_attack_probability < 0.35)
+            or (ev.fused_attack_probability <= 0.30 and ev.model_agreement_score <= 0.25)
+        ):
             return RuleResult(
                 action="ALLOW",
                 severity="LOW",
                 rule_name="R5_ALLOW_BENIGN",
                 reason=(
                     f"Fused P(attack)={ev.fused_attack_probability:.3f} "
-                    f"≤ {cfg.r5_max_prob}. Traffic classified as benign."
+                    f"with {ev.models_indicating_attack}/{ev.models_available} models indicating attack. "
+                    f"Traffic classified as benign."
                 ),
             )
         return None

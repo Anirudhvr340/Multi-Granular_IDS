@@ -123,28 +123,38 @@ class PacketModelAdapter(BaseAdapter):
 
         raw_probs = self.model.predict(X_cnn, batch_size=512, verbose=0)
         cal_probs = self.calibrator.predict_proba(raw_probs)
+        mean_class_probs = cal_probs.mean(axis=0)
 
         # Extract attack probability per packet/flow: 1 - P(benign)
         per_pkt_attack = 1.0 - cal_probs[:, self._benign_idx]
-
-        # Use quantile pooling across packets in the window (robust to single-packet outliers)
-        # p95 gives strong detection when an attack burst is present
-        p95_attack = float(np.percentile(per_pkt_attack, 95))
-        p90_attack = float(np.percentile(per_pkt_attack, 90))
+        mean_benign = float(cal_probs[:, self._benign_idx].mean())
         mean_attack = float(np.mean(per_pkt_attack))
-        frac_attack = float(np.mean(per_pkt_attack > 0.5))
+        p90_attack = float(np.percentile(per_pkt_attack, 90))
+        p95_attack = float(np.percentile(per_pkt_attack, 95))
+        frac_50 = float(np.mean(per_pkt_attack >= 0.50))
+        frac_70 = float(np.mean(per_pkt_attack >= 0.70))
+        frac_attack = float(np.mean(per_pkt_attack >= self.ATTACK_THRESHOLD))
 
-        # Modulated window attack probability
-        window_p_attack = float(np.clip(0.6 * p95_attack + 0.4 * frac_attack, 0.0, 1.0))
-        is_attack = window_p_attack >= self.ATTACK_THRESHOLD
-
-        mean_class_probs = cal_probs.mean(axis=0)
-        if is_attack:
-            attack_class_probs = mean_class_probs.copy()
+        # Density-aware window pooling: require genuine attack density to override benign majority
+        if mean_benign >= 0.50 and frac_70 < 0.20:
+            window_p_attack = min(mean_attack, 0.25)
+            is_attack = False
+            pred_idx = self._benign_idx
+        elif frac_70 >= 0.20 or (p95_attack >= 0.90 and frac_50 >= 0.15):
+            window_p_attack = max(p90_attack, p95_attack)
+            is_attack = True
+            attack_class_probs = cal_probs.mean(axis=0).copy()
             attack_class_probs[self._benign_idx] = -1.0
             pred_idx = int(np.argmax(attack_class_probs))
         else:
-            pred_idx = self._benign_idx
+            window_p_attack = float(np.clip(0.5 * p90_attack + 0.5 * mean_attack, 0.0, 1.0))
+            is_attack = window_p_attack >= self.ATTACK_THRESHOLD
+            if is_attack:
+                attack_class_probs = cal_probs.mean(axis=0).copy()
+                attack_class_probs[self._benign_idx] = -1.0
+                pred_idx = int(np.argmax(attack_class_probs))
+            else:
+                pred_idx = self._benign_idx
 
         pred_label = self.classes[pred_idx]
         conf = float(mean_class_probs[pred_idx])

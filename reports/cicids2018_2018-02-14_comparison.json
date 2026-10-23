@@ -1,0 +1,191 @@
+{
+  "day": "2018-02-14",
+  "file": "cicids2018/02-14-2018.csv",
+  "description": "Brute Force Day: FTP-BruteForce, SSH-Bruteforce",
+  "metrics_fused_probabilities": {
+    "label": "fused_probabilities_4models",
+    "use_llm": false,
+    "total_windows": 5,
+    "total_attacks": 0,
+    "total_benign": 5,
+    "tp": 0,
+    "fp": 5,
+    "fn": 0,
+    "tn": 0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "fpr": 1.0,
+    "f1": 0.0,
+    "mean_fused_attack_prob": 0.5145,
+    "mean_model_agreement": 0.75,
+    "action_distribution": {
+      "FLAG": 5
+    },
+    "source_distribution": {
+      "rule": 5
+    },
+    "per_class": {
+      "Benign": {
+        "windows": 5,
+        "detected": 5,
+        "allowed": 0
+      }
+    },
+    "elapsed_seconds": 10.5,
+    "ms_per_window": 2099.05,
+    "stats": {
+      "gemini_calls": 0,
+      "gemini_errors": 0,
+      "llm_calls": 0,
+      "llm_errors": 0,
+      "llm_model": "qwen2.5:7b",
+      "confusing_cases_dispatched": 0,
+      "deterministic_handled": 5
+    }
+  },
+  "metrics_hybrid_qwen2.5": {
+    "label": "hybrid_with_qwen2.5",
+    "use_llm": true,
+    "total_windows": 5,
+    "total_attacks": 0,
+    "total_benign": 5,
+    "tp": 0,
+    "fp": 5,
+    "fn": 0,
+    "tn": 0,
+    "recall": 0.0,
+    "precision": 0.0,
+    "fpr": 1.0,
+    "f1": 0.0,
+    "mean_fused_attack_prob": 0.5145,
+    "mean_model_agreement": 0.75,
+    "action_distribution": {
+      "FLAG": 5
+    },
+    "source_distribution": {
+      "rule": 5
+    },
+    "per_class": {
+      "Benign": {
+        "windows": 5,
+        "detected": 5,
+        "allowed": 0
+      }
+    },
+    "elapsed_seconds": 12.46,
+    "ms_per_window": 2492.61,
+    "stats": {
+      "gemini_calls": 0,
+      "gemini_errors": 0,
+      "llm_calls": 0,
+      "llm_errors": 0,
+      "llm_model": "qwen2.5:7b",
+      "confusing_cases_dispatched": 0,
+      "deterministic_handled": 5
+    }
+  },
+  "comparison_table": [
+    [
+      "Dataset File",
+      "02-14-2018.csv",
+      "02-14-2018.csv",
+      "2018-02-14"
+    ],
+    [
+      "Total Windows Evaluated",
+      "5",
+      "5",
+      "Identical traffic"
+    ],
+    [
+      "Total Attack Windows",
+      "0",
+      "0",
+      "Ground truth"
+    ],
+    [
+      "Total Benign Windows",
+      "5",
+      "5",
+      "Ground truth"
+    ],
+    [
+      "Attack Recall (Detection Rate)",
+      "0.00%",
+      "0.00%",
+      "+0.00%"
+    ],
+    [
+      "Detection Precision",
+      "0.00%",
+      "0.00%",
+      "+0.00%"
+    ],
+    [
+      "False Positive Rate (FPR)",
+      "100.00%",
+      "100.00%",
+      "+0.00%"
+    ],
+    [
+      "Detection F1-Score",
+      "0.00%",
+      "0.00%",
+      "+0.00%"
+    ],
+    [
+      "Mean Fused P(attack)",
+      "0.5145",
+      "0.5145",
+      "Ensemble evidence"
+    ],
+    [
+      "Mean Model Agreement",
+      "75.0%",
+      "75.0%",
+      "Ensemble consensus"
+    ],
+    [
+      "Action: ALLOW",
+      "0",
+      "0",
+      "+0"
+    ],
+    [
+      "Action: FLAG",
+      "5",
+      "5",
+      "+0"
+    ],
+    [
+      "Action: BLOCK",
+      "0",
+      "0",
+      "+0"
+    ],
+    [
+      "Ambiguous Dispatched to Qwen",
+      "0 (Bypassed)",
+      "0",
+      "+0 calls"
+    ],
+    [
+      "Deterministic Fast-Path Handled",
+      "5",
+      "5",
+      "0 ms LLM overhead"
+    ],
+    [
+      "Total Elapsed Time",
+      "10.50s",
+      "12.46s",
+      "+1.96s"
+    ],
+    [
+      "Latency (per window)",
+      "2099.1 ms",
+      "2492.6 ms",
+      "Real-time edge rate"
+    ]
+  ]
+}

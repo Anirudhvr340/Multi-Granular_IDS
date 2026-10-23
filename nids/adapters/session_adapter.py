@@ -183,25 +183,37 @@ class SessionModelAdapter(BaseAdapter):
             tensor_x = torch.tensor(X_sess_sc, dtype=torch.float32).to(self.device)
             logits = self.model(tensor_x)
             probs = torch.softmax(logits, dim=-1).cpu().numpy()
+            mean_class_probs = probs.mean(axis=0)
 
         per_sess_attack = 1.0 - probs[:, self._benign_idx]
-        p95_attack = float(np.percentile(per_sess_attack, 95))
+        mean_benign = float(probs[:, self._benign_idx].mean())
         mean_attack = float(np.mean(per_sess_attack))
-        frac_attack = float(np.mean(per_sess_attack > 0.5))
+        p90_attack = float(np.percentile(per_sess_attack, 90))
+        p95_attack = float(np.percentile(per_sess_attack, 95))
+        frac_50 = float(np.mean(per_sess_attack >= 0.50))
+        frac_70 = float(np.mean(per_sess_attack >= 0.70))
+        frac_attack = float(np.mean(per_sess_attack >= self.ATTACK_THRESHOLD))
 
-        window_p_attack = float(np.clip(0.6 * p95_attack + 0.4 * frac_attack, 0.0, 1.0))
-        mean_class_probs = probs.mean(axis=0)
-
-        # Calibrated decision: require attack probability >= 0.50 before overriding Benign
-        is_attack = window_p_attack >= max(self.ATTACK_THRESHOLD, 0.50)
-
-        if is_attack:
-            attack_class_probs = mean_class_probs.copy()
+        # Density-aware session pooling: require multiple attack sessions before overriding benign majority
+        if mean_benign >= 0.50 and frac_70 < 0.25:
+            window_p_attack = min(mean_attack, 0.25)
+            is_attack = False
+            pred_idx = self._benign_idx
+        elif frac_70 >= 0.25 or (p95_attack >= 0.90 and frac_50 >= 0.20):
+            window_p_attack = p95_attack
+            is_attack = True
+            attack_class_probs = probs.mean(axis=0).copy()
             attack_class_probs[self._benign_idx] = 0.0
             pred_idx = int(np.argmax(attack_class_probs))
         else:
-            pred_idx = self._benign_idx
-            is_attack = False
+            window_p_attack = float(np.clip(0.5 * p95_attack + 0.5 * mean_attack, 0.0, 1.0))
+            is_attack = window_p_attack >= max(self.ATTACK_THRESHOLD, 0.50)
+            if is_attack:
+                attack_class_probs = probs.mean(axis=0).copy()
+                attack_class_probs[self._benign_idx] = 0.0
+                pred_idx = int(np.argmax(attack_class_probs))
+            else:
+                pred_idx = self._benign_idx
 
         pred_label = self.classes[pred_idx]
         conf = float(mean_class_probs[pred_idx])

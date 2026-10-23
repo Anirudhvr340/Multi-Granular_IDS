@@ -1,0 +1,1075 @@
+{
+  "total_windows": 3435,
+  "total_attacks_count": 34,
+  "per_original_attack_metrics": [
+    {
+      "attack_class": "BenignTraffic",
+      "category": "Benign",
+      "windows": 362,
+      "flows": 1264,
+      "detected_windows": 235,
+      "allowed_windows": 127,
+      "detection_rate_pct": 64.92,
+      "mean_fused_prob": 0.4222,
+      "packet_model_rate_pct": 80.39,
+      "flow_model_rate_pct": 45.03,
+      "time_window_model_rate_pct": 93.09,
+      "session_model_rate_pct": 27.62,
+      "actions": {
+        "ALLOW": 127,
+        "FLAG": 231,
+        "BLOCK": 4
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 105,
+        "R3_PERSISTENT_ATTACK": 4,
+        "R4_DDOS_FLOOD": 2
+      }
+    },
+    {
+      "attack_class": "DDoS-ACK_Fragmentation",
+      "category": "DDoS",
+      "windows": 232,
+      "flows": 1298,
+      "detected_windows": 138,
+      "allowed_windows": 94,
+      "detection_rate_pct": 59.48,
+      "mean_fused_prob": 0.4166,
+      "packet_model_rate_pct": 97.84,
+      "flow_model_rate_pct": 21.98,
+      "time_window_model_rate_pct": 84.48,
+      "session_model_rate_pct": 56.47,
+      "actions": {
+        "ALLOW": 94,
+        "FLAG": 136,
+        "BLOCK": 2
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 56,
+        "R3_PERSISTENT_ATTACK": 2,
+        "R4_DDOS_FLOOD": 1
+      }
+    },
+    {
+      "attack_class": "DDoS-HTTP_Flood",
+      "category": "DDoS",
+      "windows": 228,
+      "flows": 984,
+      "detected_windows": 120,
+      "allowed_windows": 108,
+      "detection_rate_pct": 52.63,
+      "mean_fused_prob": 0.3889,
+      "packet_model_rate_pct": 60.53,
+      "flow_model_rate_pct": 40.35,
+      "time_window_model_rate_pct": 89.04,
+      "session_model_rate_pct": 38.6,
+      "actions": {
+        "FLAG": 120,
+        "ALLOW": 108
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 31
+      }
+    },
+    {
+      "attack_class": "DDoS-ICMP_Flood",
+      "category": "DDoS",
+      "windows": 174,
+      "flows": 901,
+      "detected_windows": 83,
+      "allowed_windows": 91,
+      "detection_rate_pct": 47.7,
+      "mean_fused_prob": 0.3792,
+      "packet_model_rate_pct": 66.09,
+      "flow_model_rate_pct": 32.76,
+      "time_window_model_rate_pct": 86.78,
+      "session_model_rate_pct": 47.7,
+      "actions": {
+        "ALLOW": 91,
+        "FLAG": 83
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 14
+      }
+    },
+    {
+      "attack_class": "DDoS-SlowLoris",
+      "category": "DDoS",
+      "windows": 170,
+      "flows": 445,
+      "detected_windows": 89,
+      "allowed_windows": 81,
+      "detection_rate_pct": 52.35,
+      "mean_fused_prob": 0.4013,
+      "packet_model_rate_pct": 62.35,
+      "flow_model_rate_pct": 57.65,
+      "time_window_model_rate_pct": 89.41,
+      "session_model_rate_pct": 13.53,
+      "actions": {
+        "ALLOW": 81,
+        "FLAG": 88,
+        "BLOCK": 1
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 38,
+        "R3_PERSISTENT_ATTACK": 1,
+        "R4_DDOS_FLOOD": 1
+      }
+    },
+    {
+      "attack_class": "DDoS-ICMP_Fragmentation",
+      "category": "DDoS",
+      "windows": 156,
+      "flows": 909,
+      "detected_windows": 74,
+      "allowed_windows": 82,
+      "detection_rate_pct": 47.44,
+      "mean_fused_prob": 0.3843,
+      "packet_model_rate_pct": 69.87,
+      "flow_model_rate_pct": 30.13,
+      "time_window_model_rate_pct": 82.69,
+      "session_model_rate_pct": 51.92,
+      "actions": {
+        "FLAG": 73,
+        "ALLOW": 82,
+        "BLOCK": 1
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 15
+      }
+    },
+    {
+      "attack_class": "DDoS-PSHACK_Flood",
+      "category": "DDoS",
+      "windows": 130,
+      "flows": 732,
+      "detected_windows": 67,
+      "allowed_windows": 63,
+      "detection_rate_pct": 51.54,
+      "mean_fused_prob": 0.3792,
+      "packet_model_rate_pct": 64.62,
+      "flow_model_rate_pct": 24.62,
+      "time_window_model_rate_pct": 87.69,
+      "session_model_rate_pct": 56.15,
+      "actions": {
+        "ALLOW": 63,
+        "FLAG": 67
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 14
+      }
+    },
+    {
+      "attack_class": "DNS_Spoofing",
+      "category": "Spoofing / MITM",
+      "windows": 130,
+      "flows": 270,
+      "detected_windows": 88,
+      "allowed_windows": 42,
+      "detection_rate_pct": 67.69,
+      "mean_fused_prob": 0.4313,
+      "packet_model_rate_pct": 59.23,
+      "flow_model_rate_pct": 67.69,
+      "time_window_model_rate_pct": 92.31,
+      "session_model_rate_pct": 7.69,
+      "actions": {
+        "FLAG": 86,
+        "ALLOW": 42,
+        "BLOCK": 2
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 43,
+        "R3_PERSISTENT_ATTACK": 2,
+        "R4_DDOS_FLOOD": 2
+      }
+    },
+    {
+      "attack_class": "DDoS-RSTFINFlood",
+      "category": "DDoS",
+      "windows": 129,
+      "flows": 680,
+      "detected_windows": 63,
+      "allowed_windows": 66,
+      "detection_rate_pct": 48.84,
+      "mean_fused_prob": 0.3948,
+      "packet_model_rate_pct": 68.99,
+      "flow_model_rate_pct": 40.31,
+      "time_window_model_rate_pct": 79.84,
+      "session_model_rate_pct": 43.41,
+      "actions": {
+        "FLAG": 63,
+        "ALLOW": 66
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 23
+      }
+    },
+    {
+      "attack_class": "DDoS-SYN_Flood",
+      "category": "DDoS",
+      "windows": 117,
+      "flows": 580,
+      "detected_windows": 61,
+      "allowed_windows": 56,
+      "detection_rate_pct": 52.14,
+      "mean_fused_prob": 0.3831,
+      "packet_model_rate_pct": 64.96,
+      "flow_model_rate_pct": 35.9,
+      "time_window_model_rate_pct": 84.62,
+      "session_model_rate_pct": 41.88,
+      "actions": {
+        "ALLOW": 56,
+        "FLAG": 61
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 13
+      }
+    },
+    {
+      "attack_class": "DDoS-SynonymousIP_Flood",
+      "category": "DDoS",
+      "windows": 103,
+      "flows": 523,
+      "detected_windows": 55,
+      "allowed_windows": 48,
+      "detection_rate_pct": 53.4,
+      "mean_fused_prob": 0.3863,
+      "packet_model_rate_pct": 74.76,
+      "flow_model_rate_pct": 33.98,
+      "time_window_model_rate_pct": 90.29,
+      "session_model_rate_pct": 40.78,
+      "actions": {
+        "FLAG": 55,
+        "ALLOW": 48
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 12
+      }
+    },
+    {
+      "attack_class": "BrowserHijacking",
+      "category": "Web & Injection",
+      "windows": 99,
+      "flows": 352,
+      "detected_windows": 52,
+      "allowed_windows": 47,
+      "detection_rate_pct": 52.53,
+      "mean_fused_prob": 0.3852,
+      "packet_model_rate_pct": 61.62,
+      "flow_model_rate_pct": 43.43,
+      "time_window_model_rate_pct": 73.74,
+      "session_model_rate_pct": 33.33,
+      "actions": {
+        "ALLOW": 47,
+        "FLAG": 52
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 18
+      }
+    },
+    {
+      "attack_class": "VulnerabilityScan",
+      "category": "Reconnaissance",
+      "windows": 96,
+      "flows": 109,
+      "detected_windows": 46,
+      "allowed_windows": 50,
+      "detection_rate_pct": 47.92,
+      "mean_fused_prob": 0.3649,
+      "packet_model_rate_pct": 14.58,
+      "flow_model_rate_pct": 79.17,
+      "time_window_model_rate_pct": 98.96,
+      "session_model_rate_pct": 2.08,
+      "actions": {
+        "FLAG": 45,
+        "ALLOW": 50,
+        "BLOCK": 1
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 4,
+        "R3_PERSISTENT_ATTACK": 1
+      }
+    },
+    {
+      "attack_class": "Recon-PortScan",
+      "category": "Reconnaissance",
+      "windows": 93,
+      "flows": 203,
+      "detected_windows": 60,
+      "allowed_windows": 33,
+      "detection_rate_pct": 64.52,
+      "mean_fused_prob": 0.4334,
+      "packet_model_rate_pct": 39.78,
+      "flow_model_rate_pct": 73.12,
+      "time_window_model_rate_pct": 93.55,
+      "session_model_rate_pct": 15.05,
+      "actions": {
+        "FLAG": 56,
+        "BLOCK": 4,
+        "ALLOW": 33
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 20,
+        "R3_PERSISTENT_ATTACK": 3
+      }
+    },
+    {
+      "attack_class": "DDoS-UDP_Fragmentation",
+      "category": "DDoS",
+      "windows": 91,
+      "flows": 456,
+      "detected_windows": 56,
+      "allowed_windows": 35,
+      "detection_rate_pct": 61.54,
+      "mean_fused_prob": 0.4143,
+      "packet_model_rate_pct": 92.31,
+      "flow_model_rate_pct": 34.07,
+      "time_window_model_rate_pct": 82.42,
+      "session_model_rate_pct": 42.86,
+      "actions": {
+        "FLAG": 56,
+        "ALLOW": 35
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 26
+      }
+    },
+    {
+      "attack_class": "CommandInjection",
+      "category": "Web & Injection",
+      "windows": 89,
+      "flows": 310,
+      "detected_windows": 44,
+      "allowed_windows": 45,
+      "detection_rate_pct": 49.44,
+      "mean_fused_prob": 0.3981,
+      "packet_model_rate_pct": 61.8,
+      "flow_model_rate_pct": 48.31,
+      "time_window_model_rate_pct": 84.27,
+      "session_model_rate_pct": 26.97,
+      "actions": {
+        "ALLOW": 45,
+        "FLAG": 44
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 14
+      }
+    },
+    {
+      "attack_class": "DDoS-TCP_Flood",
+      "category": "DDoS",
+      "windows": 88,
+      "flows": 509,
+      "detected_windows": 37,
+      "allowed_windows": 51,
+      "detection_rate_pct": 42.05,
+      "mean_fused_prob": 0.3824,
+      "packet_model_rate_pct": 63.64,
+      "flow_model_rate_pct": 43.18,
+      "time_window_model_rate_pct": 82.95,
+      "session_model_rate_pct": 48.86,
+      "actions": {
+        "ALLOW": 51,
+        "FLAG": 37
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 8
+      }
+    },
+    {
+      "attack_class": "MITM-ArpSpoofing",
+      "category": "Spoofing / MITM",
+      "windows": 86,
+      "flows": 225,
+      "detected_windows": 60,
+      "allowed_windows": 26,
+      "detection_rate_pct": 69.77,
+      "mean_fused_prob": 0.4274,
+      "packet_model_rate_pct": 70.93,
+      "flow_model_rate_pct": 54.65,
+      "time_window_model_rate_pct": 95.35,
+      "session_model_rate_pct": 17.44,
+      "actions": {
+        "ALLOW": 26,
+        "FLAG": 57,
+        "BLOCK": 3
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 27,
+        "R3_PERSISTENT_ATTACK": 3
+      }
+    },
+    {
+      "attack_class": "Recon-OSScan",
+      "category": "Reconnaissance",
+      "windows": 86,
+      "flows": 155,
+      "detected_windows": 61,
+      "allowed_windows": 25,
+      "detection_rate_pct": 70.93,
+      "mean_fused_prob": 0.4382,
+      "packet_model_rate_pct": 36.05,
+      "flow_model_rate_pct": 76.74,
+      "time_window_model_rate_pct": 96.51,
+      "session_model_rate_pct": 9.3,
+      "actions": {
+        "ALLOW": 25,
+        "FLAG": 60,
+        "BLOCK": 1
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 22,
+        "R3_PERSISTENT_ATTACK": 1,
+        "R4_DDOS_FLOOD": 2
+      }
+    },
+    {
+      "attack_class": "Recon-HostDiscovery",
+      "category": "Reconnaissance",
+      "windows": 82,
+      "flows": 197,
+      "detected_windows": 54,
+      "allowed_windows": 28,
+      "detection_rate_pct": 65.85,
+      "mean_fused_prob": 0.4084,
+      "packet_model_rate_pct": 37.8,
+      "flow_model_rate_pct": 70.73,
+      "time_window_model_rate_pct": 95.12,
+      "session_model_rate_pct": 17.07,
+      "actions": {
+        "ALLOW": 28,
+        "FLAG": 52,
+        "BLOCK": 2
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 15,
+        "R4_DDOS_FLOOD": 1,
+        "R3_PERSISTENT_ATTACK": 2
+      }
+    },
+    {
+      "attack_class": "DDoS-UDP_Flood",
+      "category": "DDoS",
+      "windows": 82,
+      "flows": 456,
+      "detected_windows": 38,
+      "allowed_windows": 44,
+      "detection_rate_pct": 46.34,
+      "mean_fused_prob": 0.3793,
+      "packet_model_rate_pct": 100.0,
+      "flow_model_rate_pct": 37.8,
+      "time_window_model_rate_pct": 65.85,
+      "session_model_rate_pct": 45.12,
+      "actions": {
+        "ALLOW": 44,
+        "FLAG": 38
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 6
+      }
+    },
+    {
+      "attack_class": "DictionaryBruteForce",
+      "category": "Brute Force",
+      "windows": 78,
+      "flows": 153,
+      "detected_windows": 51,
+      "allowed_windows": 27,
+      "detection_rate_pct": 65.38,
+      "mean_fused_prob": 0.419,
+      "packet_model_rate_pct": 38.46,
+      "flow_model_rate_pct": 73.08,
+      "time_window_model_rate_pct": 88.46,
+      "session_model_rate_pct": 6.41,
+      "actions": {
+        "ALLOW": 27,
+        "FLAG": 51
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 22,
+        "R4_DDOS_FLOOD": 1
+      }
+    },
+    {
+      "attack_class": "DoS-SYN_Flood",
+      "category": "DoS",
+      "windows": 73,
+      "flows": 295,
+      "detected_windows": 42,
+      "allowed_windows": 31,
+      "detection_rate_pct": 57.53,
+      "mean_fused_prob": 0.396,
+      "packet_model_rate_pct": 56.16,
+      "flow_model_rate_pct": 50.68,
+      "time_window_model_rate_pct": 89.04,
+      "session_model_rate_pct": 32.88,
+      "actions": {
+        "ALLOW": 31,
+        "FLAG": 42
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 12
+      }
+    },
+    {
+      "attack_class": "DoS-HTTP_Flood",
+      "category": "DoS",
+      "windows": 70,
+      "flows": 260,
+      "detected_windows": 51,
+      "allowed_windows": 19,
+      "detection_rate_pct": 72.86,
+      "mean_fused_prob": 0.4254,
+      "packet_model_rate_pct": 70.0,
+      "flow_model_rate_pct": 47.14,
+      "time_window_model_rate_pct": 94.29,
+      "session_model_rate_pct": 30.0,
+      "actions": {
+        "FLAG": 51,
+        "ALLOW": 19
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 21
+      }
+    },
+    {
+      "attack_class": "Backdoor_Malware",
+      "category": "Malware / Backdoor",
+      "windows": 69,
+      "flows": 214,
+      "detected_windows": 38,
+      "allowed_windows": 31,
+      "detection_rate_pct": 55.07,
+      "mean_fused_prob": 0.3908,
+      "packet_model_rate_pct": 53.62,
+      "flow_model_rate_pct": 55.07,
+      "time_window_model_rate_pct": 89.86,
+      "session_model_rate_pct": 27.54,
+      "actions": {
+        "ALLOW": 31,
+        "FLAG": 37,
+        "BLOCK": 1
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 5,
+        "R3_PERSISTENT_ATTACK": 1
+      }
+    },
+    {
+      "attack_class": "DoS-UDP_Flood",
+      "category": "DoS",
+      "windows": 59,
+      "flows": 347,
+      "detected_windows": 28,
+      "allowed_windows": 31,
+      "detection_rate_pct": 47.46,
+      "mean_fused_prob": 0.387,
+      "packet_model_rate_pct": 91.53,
+      "flow_model_rate_pct": 33.9,
+      "time_window_model_rate_pct": 66.1,
+      "session_model_rate_pct": 52.54,
+      "actions": {
+        "FLAG": 28,
+        "ALLOW": 31
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 9
+      }
+    },
+    {
+      "attack_class": "DoS-TCP_Flood",
+      "category": "DoS",
+      "windows": 54,
+      "flows": 265,
+      "detected_windows": 30,
+      "allowed_windows": 24,
+      "detection_rate_pct": 55.56,
+      "mean_fused_prob": 0.4021,
+      "packet_model_rate_pct": 61.11,
+      "flow_model_rate_pct": 51.85,
+      "time_window_model_rate_pct": 92.59,
+      "session_model_rate_pct": 38.89,
+      "actions": {
+        "FLAG": 30,
+        "ALLOW": 24
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 9
+      }
+    },
+    {
+      "attack_class": "Mirai-greeth_flood",
+      "category": "Mirai / IoT Botnet",
+      "windows": 49,
+      "flows": 295,
+      "detected_windows": 37,
+      "allowed_windows": 12,
+      "detection_rate_pct": 75.51,
+      "mean_fused_prob": 0.3851,
+      "packet_model_rate_pct": 59.18,
+      "flow_model_rate_pct": 30.61,
+      "time_window_model_rate_pct": 93.88,
+      "session_model_rate_pct": 61.22,
+      "actions": {
+        "ALLOW": 12,
+        "FLAG": 37
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 3
+      }
+    },
+    {
+      "attack_class": "Mirai-udpplain",
+      "category": "Mirai / IoT Botnet",
+      "windows": 47,
+      "flows": 265,
+      "detected_windows": 25,
+      "allowed_windows": 22,
+      "detection_rate_pct": 53.19,
+      "mean_fused_prob": 0.4359,
+      "packet_model_rate_pct": 100.0,
+      "flow_model_rate_pct": 38.3,
+      "time_window_model_rate_pct": 74.47,
+      "session_model_rate_pct": 53.19,
+      "actions": {
+        "FLAG": 24,
+        "ALLOW": 22,
+        "BLOCK": 1
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 14,
+        "R3_PERSISTENT_ATTACK": 1
+      }
+    },
+    {
+      "attack_class": "Mirai-greip_flood",
+      "category": "Mirai / IoT Botnet",
+      "windows": 47,
+      "flows": 262,
+      "detected_windows": 23,
+      "allowed_windows": 24,
+      "detection_rate_pct": 48.94,
+      "mean_fused_prob": 0.3824,
+      "packet_model_rate_pct": 53.19,
+      "flow_model_rate_pct": 40.43,
+      "time_window_model_rate_pct": 87.23,
+      "session_model_rate_pct": 51.06,
+      "actions": {
+        "ALLOW": 24,
+        "FLAG": 23
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 3
+      }
+    },
+    {
+      "attack_class": "SqlInjection",
+      "category": "Web & Injection",
+      "windows": 35,
+      "flows": 46,
+      "detected_windows": 24,
+      "allowed_windows": 11,
+      "detection_rate_pct": 68.57,
+      "mean_fused_prob": 0.4204,
+      "packet_model_rate_pct": 22.86,
+      "flow_model_rate_pct": 82.86,
+      "time_window_model_rate_pct": 97.14,
+      "session_model_rate_pct": 2.86,
+      "actions": {
+        "ALLOW": 11,
+        "FLAG": 23,
+        "BLOCK": 1
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 3,
+        "R3_PERSISTENT_ATTACK": 1
+      }
+    },
+    {
+      "attack_class": "XSS",
+      "category": "Web & Injection",
+      "windows": 21,
+      "flows": 21,
+      "detected_windows": 14,
+      "allowed_windows": 7,
+      "detection_rate_pct": 66.67,
+      "mean_fused_prob": 0.4151,
+      "packet_model_rate_pct": 14.29,
+      "flow_model_rate_pct": 85.71,
+      "time_window_model_rate_pct": 100.0,
+      "session_model_rate_pct": 0.0,
+      "actions": {
+        "ALLOW": 7,
+        "FLAG": 14
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 8
+      }
+    },
+    {
+      "attack_class": "Recon-PingSweep",
+      "category": "Reconnaissance",
+      "windows": 7,
+      "flows": 8,
+      "detected_windows": 4,
+      "allowed_windows": 3,
+      "detection_rate_pct": 57.14,
+      "mean_fused_prob": 0.4196,
+      "packet_model_rate_pct": 14.29,
+      "flow_model_rate_pct": 85.71,
+      "time_window_model_rate_pct": 100.0,
+      "session_model_rate_pct": 0.0,
+      "actions": {
+        "ALLOW": 3,
+        "FLAG": 4
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 1
+      }
+    },
+    {
+      "attack_class": "Uploading_Attack",
+      "category": "Web & Injection",
+      "windows": 3,
+      "flows": 3,
+      "detected_windows": 2,
+      "allowed_windows": 1,
+      "detection_rate_pct": 66.67,
+      "mean_fused_prob": 0.4426,
+      "packet_model_rate_pct": 33.33,
+      "flow_model_rate_pct": 100.0,
+      "time_window_model_rate_pct": 100.0,
+      "session_model_rate_pct": 0.0,
+      "actions": {
+        "FLAG": 2,
+        "ALLOW": 1
+      },
+      "rules_triggered": {
+        "R6_MODERATE_FLAG": 1
+      }
+    }
+  ],
+  "per_mapped_class_metrics": [
+    {
+      "mapped_class": "DDOS attack-HOIC",
+      "windows": 1185,
+      "flows": 6944,
+      "detected_windows": 631,
+      "allowed_windows": 554,
+      "detection_rate_pct": 53.25,
+      "mean_fused_prob": 0.395,
+      "packet_model_rate_pct": 74.01,
+      "flow_model_rate_pct": 28.44,
+      "time_window_model_rate_pct": 85.74,
+      "session_model_rate_pct": 55.78,
+      "actions": {
+        "ALLOW": 554,
+        "FLAG": 630,
+        "BLOCK": 1
+      }
+    },
+    {
+      "mapped_class": "Infilteration",
+      "windows": 839,
+      "flows": 2100,
+      "detected_windows": 498,
+      "allowed_windows": 341,
+      "detection_rate_pct": 59.36,
+      "mean_fused_prob": 0.4079,
+      "packet_model_rate_pct": 50.18,
+      "flow_model_rate_pct": 62.1,
+      "time_window_model_rate_pct": 91.42,
+      "session_model_rate_pct": 15.85,
+      "actions": {
+        "FLAG": 484,
+        "BLOCK": 14,
+        "ALLOW": 341
+      }
+    },
+    {
+      "mapped_class": "Bot",
+      "windows": 404,
+      "flows": 1944,
+      "detected_windows": 213,
+      "allowed_windows": 191,
+      "detection_rate_pct": 52.72,
+      "mean_fused_prob": 0.3886,
+      "packet_model_rate_pct": 77.97,
+      "flow_model_rate_pct": 38.61,
+      "time_window_model_rate_pct": 81.68,
+      "session_model_rate_pct": 42.08,
+      "actions": {
+        "ALLOW": 191,
+        "FLAG": 212,
+        "BLOCK": 1
+      }
+    },
+    {
+      "mapped_class": "DoS attacks-Hulk",
+      "windows": 335,
+      "flows": 1388,
+      "detected_windows": 188,
+      "allowed_windows": 147,
+      "detection_rate_pct": 56.12,
+      "mean_fused_prob": 0.3953,
+      "packet_model_rate_pct": 70.15,
+      "flow_model_rate_pct": 40.0,
+      "time_window_model_rate_pct": 85.07,
+      "session_model_rate_pct": 37.91,
+      "actions": {
+        "ALLOW": 147,
+        "FLAG": 187,
+        "BLOCK": 1
+      }
+    },
+    {
+      "mapped_class": "Benign",
+      "windows": 251,
+      "flows": 628,
+      "detected_windows": 167,
+      "allowed_windows": 84,
+      "detection_rate_pct": 66.53,
+      "mean_fused_prob": 0.4345,
+      "packet_model_rate_pct": 74.9,
+      "flow_model_rate_pct": 60.56,
+      "time_window_model_rate_pct": 94.42,
+      "session_model_rate_pct": 9.96,
+      "actions": {
+        "FLAG": 163,
+        "ALLOW": 84,
+        "BLOCK": 4
+      }
+    },
+    {
+      "mapped_class": "DDOS attack-LOIC-UDP",
+      "windows": 132,
+      "flows": 528,
+      "detected_windows": 68,
+      "allowed_windows": 64,
+      "detection_rate_pct": 51.52,
+      "mean_fused_prob": 0.3967,
+      "packet_model_rate_pct": 96.97,
+      "flow_model_rate_pct": 46.97,
+      "time_window_model_rate_pct": 71.21,
+      "session_model_rate_pct": 32.58,
+      "actions": {
+        "ALLOW": 64,
+        "FLAG": 67,
+        "BLOCK": 1
+      }
+    },
+    {
+      "mapped_class": "DoS attacks-Slowloris",
+      "windows": 95,
+      "flows": 147,
+      "detected_windows": 51,
+      "allowed_windows": 44,
+      "detection_rate_pct": 53.68,
+      "mean_fused_prob": 0.4035,
+      "packet_model_rate_pct": 42.11,
+      "flow_model_rate_pct": 64.21,
+      "time_window_model_rate_pct": 94.74,
+      "session_model_rate_pct": 3.16,
+      "actions": {
+        "ALLOW": 44,
+        "FLAG": 50,
+        "BLOCK": 1
+      }
+    },
+    {
+      "mapped_class": "DDoS attacks-LOIC-HTTP",
+      "windows": 68,
+      "flows": 142,
+      "detected_windows": 46,
+      "allowed_windows": 22,
+      "detection_rate_pct": 67.65,
+      "mean_fused_prob": 0.4135,
+      "packet_model_rate_pct": 38.24,
+      "flow_model_rate_pct": 79.41,
+      "time_window_model_rate_pct": 97.06,
+      "session_model_rate_pct": 5.88,
+      "actions": {
+        "FLAG": 46,
+        "ALLOW": 22
+      }
+    },
+    {
+      "mapped_class": "SSH-Bruteforce",
+      "windows": 50,
+      "flows": 60,
+      "detected_windows": 33,
+      "allowed_windows": 17,
+      "detection_rate_pct": 66.0,
+      "mean_fused_prob": 0.4187,
+      "packet_model_rate_pct": 22.0,
+      "flow_model_rate_pct": 72.0,
+      "time_window_model_rate_pct": 98.0,
+      "session_model_rate_pct": 0.0,
+      "actions": {
+        "FLAG": 33,
+        "ALLOW": 17
+      }
+    },
+    {
+      "mapped_class": "Brute Force -XSS",
+      "windows": 45,
+      "flows": 76,
+      "detected_windows": 33,
+      "allowed_windows": 12,
+      "detection_rate_pct": 73.33,
+      "mean_fused_prob": 0.416,
+      "packet_model_rate_pct": 28.89,
+      "flow_model_rate_pct": 86.67,
+      "time_window_model_rate_pct": 100.0,
+      "session_model_rate_pct": 0.0,
+      "actions": {
+        "ALLOW": 12,
+        "FLAG": 33
+      }
+    },
+    {
+      "mapped_class": "SQL Injection",
+      "windows": 31,
+      "flows": 35,
+      "detected_windows": 22,
+      "allowed_windows": 9,
+      "detection_rate_pct": 70.97,
+      "mean_fused_prob": 0.423,
+      "packet_model_rate_pct": 16.13,
+      "flow_model_rate_pct": 87.1,
+      "time_window_model_rate_pct": 100.0,
+      "session_model_rate_pct": 0.0,
+      "actions": {
+        "ALLOW": 9,
+        "FLAG": 21,
+        "BLOCK": 1
+      }
+    }
+  ],
+  "per_category_metrics": [
+    {
+      "category": "DDoS",
+      "windows": 1700,
+      "flows": 8473,
+      "detected": 881,
+      "allowed": 819,
+      "rate_pct": 51.82,
+      "rate_name": "Detection Rate (%)",
+      "actions": {
+        "ALLOW": 819,
+        "FLAG": 877,
+        "BLOCK": 4
+      }
+    },
+    {
+      "category": "Reconnaissance",
+      "windows": 364,
+      "flows": 672,
+      "detected": 225,
+      "allowed": 139,
+      "rate_pct": 61.81,
+      "rate_name": "Detection Rate (%)",
+      "actions": {
+        "FLAG": 217,
+        "ALLOW": 139,
+        "BLOCK": 8
+      }
+    },
+    {
+      "category": "Benign",
+      "windows": 362,
+      "flows": 1264,
+      "detected": 235,
+      "allowed": 127,
+      "rate_pct": 35.08,
+      "rate_name": "Specificity (Pass %)",
+      "actions": {
+        "ALLOW": 127,
+        "FLAG": 231,
+        "BLOCK": 4
+      }
+    },
+    {
+      "category": "DoS",
+      "windows": 256,
+      "flows": 1167,
+      "detected": 151,
+      "allowed": 105,
+      "rate_pct": 58.98,
+      "rate_name": "Detection Rate (%)",
+      "actions": {
+        "FLAG": 151,
+        "ALLOW": 105
+      }
+    },
+    {
+      "category": "Web & Injection",
+      "windows": 247,
+      "flows": 732,
+      "detected": 136,
+      "allowed": 111,
+      "rate_pct": 55.06,
+      "rate_name": "Detection Rate (%)",
+      "actions": {
+        "ALLOW": 111,
+        "FLAG": 135,
+        "BLOCK": 1
+      }
+    },
+    {
+      "category": "Spoofing / MITM",
+      "windows": 216,
+      "flows": 495,
+      "detected": 148,
+      "allowed": 68,
+      "rate_pct": 68.52,
+      "rate_name": "Detection Rate (%)",
+      "actions": {
+        "FLAG": 143,
+        "ALLOW": 68,
+        "BLOCK": 5
+      }
+    },
+    {
+      "category": "Mirai / IoT Botnet",
+      "windows": 143,
+      "flows": 822,
+      "detected": 85,
+      "allowed": 58,
+      "rate_pct": 59.44,
+      "rate_name": "Detection Rate (%)",
+      "actions": {
+        "ALLOW": 58,
+        "FLAG": 84,
+        "BLOCK": 1
+      }
+    },
+    {
+      "category": "Brute Force",
+      "windows": 78,
+      "flows": 153,
+      "detected": 51,
+      "allowed": 27,
+      "rate_pct": 65.38,
+      "rate_name": "Detection Rate (%)",
+      "actions": {
+        "ALLOW": 27,
+        "FLAG": 51
+      }
+    },
+    {
+      "category": "Malware / Backdoor",
+      "windows": 69,
+      "flows": 214,
+      "detected": 38,
+      "allowed": 31,
+      "rate_pct": 55.07,
+      "rate_name": "Detection Rate (%)",
+      "actions": {
+        "ALLOW": 31,
+        "FLAG": 37,
+        "BLOCK": 1
+      }
+    }
+  ]
+}

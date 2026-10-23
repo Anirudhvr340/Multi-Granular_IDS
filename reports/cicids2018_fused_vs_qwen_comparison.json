@@ -1,0 +1,286 @@
+{
+  "dataset": "cicids2018/cicids2018_benchmark.csv",
+  "metrics_fused_probabilities": {
+    "label": "fused_probabilities_4models",
+    "use_llm": false,
+    "total_windows": 472,
+    "total_attacks": 472,
+    "total_benign": 0,
+    "tp": 365,
+    "fp": 0,
+    "fn": 107,
+    "tn": 0,
+    "recall": 0.7733,
+    "precision": 1.0,
+    "fpr": 0.0,
+    "f1": 0.8722,
+    "mean_fused_attack_prob": 0.4411,
+    "mean_model_agreement": 0.5328,
+    "action_distribution": {
+      "FLAG": 365,
+      "ALLOW": 107
+    },
+    "source_distribution": {
+      "heuristic": 302,
+      "rule": 170
+    },
+    "per_class": {
+      "Infilteration": {
+        "windows": 193,
+        "detected": 163,
+        "allowed": 30
+      },
+      "DoS attacks-SlowHTTPTest": {
+        "windows": 29,
+        "detected": 22,
+        "allowed": 7
+      },
+      "DDOS attack-HOIC": {
+        "windows": 33,
+        "detected": 18,
+        "allowed": 15
+      },
+      "SSH-Bruteforce": {
+        "windows": 26,
+        "detected": 21,
+        "allowed": 5
+      },
+      "Bot": {
+        "windows": 27,
+        "detected": 15,
+        "allowed": 12
+      },
+      "Brute Force -Web": {
+        "windows": 42,
+        "detected": 27,
+        "allowed": 15
+      },
+      "DoS attacks-Slowloris": {
+        "windows": 22,
+        "detected": 21,
+        "allowed": 1
+      },
+      "Brute Force -XSS": {
+        "windows": 24,
+        "detected": 21,
+        "allowed": 3
+      },
+      "FTP-BruteForce": {
+        "windows": 22,
+        "detected": 16,
+        "allowed": 6
+      },
+      "DoS attacks-Hulk": {
+        "windows": 29,
+        "detected": 22,
+        "allowed": 7
+      },
+      "DoS attacks-GoldenEye": {
+        "windows": 25,
+        "detected": 19,
+        "allowed": 6
+      }
+    },
+    "elapsed_seconds": 34.01,
+    "ms_per_window": 72.06,
+    "stats": {
+      "gemini_calls": 0,
+      "gemini_errors": 0,
+      "llm_calls": 0,
+      "llm_errors": 0,
+      "llm_model": "qwen2.5:7b",
+      "confusing_cases_dispatched": 0,
+      "deterministic_handled": 472
+    }
+  },
+  "metrics_hybrid_qwen2.5": {
+    "label": "hybrid_4models_with_qwen2.5",
+    "use_llm": true,
+    "total_windows": 472,
+    "total_attacks": 472,
+    "total_benign": 0,
+    "tp": 472,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "recall": 1.0,
+    "precision": 1.0,
+    "fpr": 0.0,
+    "f1": 1.0,
+    "mean_fused_attack_prob": 0.4411,
+    "mean_model_agreement": 0.5328,
+    "action_distribution": {
+      "FLAG": 472
+    },
+    "source_distribution": {
+      "qwen-2.5-7b": 302,
+      "rule": 170
+    },
+    "per_class": {
+      "Infilteration": {
+        "windows": 193,
+        "detected": 193,
+        "allowed": 0
+      },
+      "DoS attacks-SlowHTTPTest": {
+        "windows": 29,
+        "detected": 29,
+        "allowed": 0
+      },
+      "DDOS attack-HOIC": {
+        "windows": 33,
+        "detected": 33,
+        "allowed": 0
+      },
+      "SSH-Bruteforce": {
+        "windows": 26,
+        "detected": 26,
+        "allowed": 0
+      },
+      "Bot": {
+        "windows": 27,
+        "detected": 27,
+        "allowed": 0
+      },
+      "Brute Force -Web": {
+        "windows": 42,
+        "detected": 42,
+        "allowed": 0
+      },
+      "DoS attacks-Slowloris": {
+        "windows": 22,
+        "detected": 22,
+        "allowed": 0
+      },
+      "Brute Force -XSS": {
+        "windows": 24,
+        "detected": 24,
+        "allowed": 0
+      },
+      "FTP-BruteForce": {
+        "windows": 22,
+        "detected": 22,
+        "allowed": 0
+      },
+      "DoS attacks-Hulk": {
+        "windows": 29,
+        "detected": 29,
+        "allowed": 0
+      },
+      "DoS attacks-GoldenEye": {
+        "windows": 25,
+        "detected": 25,
+        "allowed": 0
+      }
+    },
+    "elapsed_seconds": 238.02,
+    "ms_per_window": 504.27,
+    "stats": {
+      "gemini_calls": 302,
+      "gemini_errors": 0,
+      "llm_calls": 302,
+      "llm_errors": 0,
+      "llm_model": "qwen2.5:7b",
+      "confusing_cases_dispatched": 302,
+      "deterministic_handled": 170
+    }
+  },
+  "comparison_table": [
+    [
+      "Total Windows Evaluated",
+      "472",
+      "472",
+      "Identical traffic"
+    ],
+    [
+      "Total Attack Windows",
+      "472",
+      "472",
+      "Ground truth"
+    ],
+    [
+      "Total Benign Windows",
+      "0",
+      "0",
+      "Ground truth"
+    ],
+    [
+      "Attack Recall (Detection Rate)",
+      "77.33%",
+      "100.00%",
+      "+22.67%"
+    ],
+    [
+      "Detection Precision",
+      "100.00%",
+      "100.00%",
+      "+0.00%"
+    ],
+    [
+      "False Positive Rate (FPR)",
+      "0.00%",
+      "0.00%",
+      "+0.00%"
+    ],
+    [
+      "Detection F1-Score",
+      "87.22%",
+      "100.00%",
+      "+12.78%"
+    ],
+    [
+      "Mean Fused P(attack)",
+      "0.4411",
+      "0.4411",
+      "Identical L2 evidence"
+    ],
+    [
+      "Mean Model Agreement",
+      "53.3%",
+      "53.3%",
+      "Ensemble consensus"
+    ],
+    [
+      "Action: ALLOW",
+      "107",
+      "0",
+      "-107"
+    ],
+    [
+      "Action: FLAG",
+      "365",
+      "472",
+      "+107"
+    ],
+    [
+      "Action: BLOCK",
+      "0",
+      "0",
+      "+0"
+    ],
+    [
+      "Ambiguous Dispatched to LLM",
+      "0 (Bypassed)",
+      "302",
+      "+302 calls"
+    ],
+    [
+      "Deterministic Fast-Path Handled",
+      "472",
+      "170",
+      "0 ms LLM overhead"
+    ],
+    [
+      "Total Elapsed Time",
+      "34.01s",
+      "238.02s",
+      "+204.01s"
+    ],
+    [
+      "Latency (per window)",
+      "72.1 ms",
+      "504.3 ms",
+      "Real-time edge rate"
+    ]
+  ]
+}

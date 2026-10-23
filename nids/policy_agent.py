@@ -1,31 +1,17 @@
 """
 Policy Agent  —  Stage 4
 =========================
-Dynamic reasoning agent backed by Gemini.
+Hybrid Deterministic and Agentic Policy Reasoning Agent backed by local Qwen 2.5 (7B Instruct).
 
-The agent is NOT a classifier.  The four ML models are the classifiers.
+The agent is NOT a classifier. The four ML models are the classifiers.
 The agent RECEIVES their evidence and DECIDES: ALLOW | FLAG | BLOCK.
 
-The agent:
-1. Receives structured evidence from all four models.
-2. Receives context state (escalation, persistence, history).
-3. Receives rule-engine result (if any).
-4. Constructs a structured SESSION SUMMARY for Gemini.
-5. Sends the summary to Gemini with a constrained prompt.
-6. Validates and parses Gemini's JSON response.
-7. Falls back to a deterministic heuristic if Gemini fails.
-
-Safety constraints
-------------------
-- Gemini cannot invent attack classes (restricted to model predictions).
-- Gemini cannot produce actions outside ALLOW | FLAG | BLOCK.
-- All responses are validated before use.
-- Gemini is never given raw traffic — only structured model evidence.
-
-Fallback policy
----------------
-If Gemini is unavailable or produces invalid output, a rule-based heuristic
-makes the final decision based solely on fused_attack_probability.
+Hybrid Architecture:
+1. Fast-Path Deterministic Engine: Handles unambiguous cases and rule triggers (R1-R6) with 0ms latency.
+2. Agentic Reasoning Layer (Qwen 2.5 7B Instruct): Dispatched on confusing, ambiguous, or contested outputs
+   (e.g., cross-model disagreement, borderline probabilities, conflicting attack families).
+3. Evaluates context state (escalation, persistence, history).
+4. Produces transparent, machine-verifiable security decisions.
 """
 
 from __future__ import annotations
@@ -62,7 +48,7 @@ class AgentDecision:
     reason:             str    = ""
     evidence_used:      list   = field(default_factory=list)
     recommended_actions: list  = field(default_factory=list)
-    source:             str    = "agent"   # "gemini" | "heuristic" | "rule"
+    source:             str    = "agent"   # "qwen-2.5-7b" | "deterministic" | "rule" | "heuristic"
     rule_triggered:     Optional[str] = None
     risk_score:         float  = 0.0
     risk_components:    dict   = field(default_factory=dict)
@@ -78,7 +64,8 @@ class PolicyAgent:
     """
     Stage 4: Dynamic policy agent.
 
-    Performs:  OBSERVE → INTERPRET → EVALUATE → CONSIDER HISTORY → DECIDE → ACT
+    Hybrid Deterministic + Agentic Policy Engine.
+    Dispatches ambiguous/confusing model outputs to local Qwen 2.5 (7B Instruct).
 
     Usage
     -----
@@ -86,7 +73,8 @@ class PolicyAgent:
     decision = agent.decide(integrated, context_summary, rule_result)
     """
 
-    GEMINI_MODEL_DEFAULT = "gemini-1.5-flash"
+    LLM_MODEL_DEFAULT = "qwen2.5:7b"
+    OLLAMA_URL_DEFAULT = "http://127.0.0.1:11434/api/generate"
 
     def __init__(
         self,
@@ -96,18 +84,54 @@ class PolicyAgent:
         flag_threshold:      float = 0.35,
         block_threshold:     float = 0.65,
         use_gemini:          bool  = True,
+        llm_model:           Optional[str]  = None,
+        ollama_url:          Optional[str]  = None,
     ):
-        raw_model = gemini_model or os.environ.get("GEMINI_MODEL", self.GEMINI_MODEL_DEFAULT)
-        if "gemini-2.5" in raw_model:
-            raw_model = "gemini-1.5-flash"
-        self._model      = raw_model
-        self._api_key    = gemini_api_key or os.environ.get("GEMINI_API_KEY", "")
+        self.llm_model   = llm_model or os.environ.get("LLM_MODEL", self.LLM_MODEL_DEFAULT)
+        self.ollama_url  = ollama_url or os.environ.get("OLLAMA_URL", self.OLLAMA_URL_DEFAULT)
         self.allow_t     = allow_threshold
         self.flag_t      = flag_threshold
         self.block_t     = block_threshold
-        self.use_gemini  = use_gemini
-        self._gemini_calls = 0
-        self._gemini_errors = 0
+        self.use_gemini  = use_gemini  # Controls whether agentic reasoning is enabled
+
+        self._llm_calls  = 0
+        self._llm_errors = 0
+        self._confusing_dispatched = 0
+        self._deterministic_handled = 0
+
+    # -----------------------------------------------------------------------
+    def _is_confusing_evidence(
+        self,
+        ev: IntegratedEvidence,
+        ctx: dict,
+        risk_score: float,
+    ) -> bool:
+        """
+        Identifies ambiguous, contested, or confusing outputs across the multi-granular models.
+        
+        Confusing output criteria:
+        1. Model Contradiction: Some models predict attack while others predict benign.
+        2. Low Consensus Agreement: Model agreement score < 0.70.
+        3. Ambiguous Risk Zone: Dynamic risk score in the critical decision margin (0.30 <= risk <= 0.65).
+        4. Attack Family Conflict: Conflicting attack families predicted across available models.
+        """
+        # Model disagreement on binary verdict (attack vs benign)
+        has_split_models = (ev.models_available > 1 and 0 < ev.models_indicating_attack < ev.models_available)
+        
+        # Low consensus agreement among models
+        low_agreement = (ev.model_agreement_score < 0.70)
+        
+        # Borderline risk score in the ambiguous transition zone where deterministic rules don't fire
+        ambiguous_risk = (0.30 <= risk_score <= 0.65)
+        
+        # Discrepant attack families among attack models
+        attack_families = {
+            m.normalised_family for m in ev.available_models()
+            if m.is_attack and m.normalised_family
+        }
+        family_conflict = len(attack_families) > 1
+
+        return has_split_models or low_agreement or (ambiguous_risk and family_conflict)
 
     # -----------------------------------------------------------------------
     def decide(
@@ -117,17 +141,14 @@ class PolicyAgent:
         rule_result:     Optional[RuleResult] = None,
     ) -> AgentDecision:
         """
-        Main entry point.  Returns an AgentDecision.
-
-        If rule_result is not None, the rule engine already decided — we
-        wrap that decision in an AgentDecision without calling Gemini.
+        Main entry point for hybrid deterministic + agentic AI decision making.
         """
-
         # ---- Compute transparent dynamic risk score ------------------------
         risk_score, risk_components = self._compute_risk_score(integrated, context_summary)
 
-        # ---- If a deterministic rule fired, use it -------------------------
+        # ---- Stage A: Deterministic Fast-Path (Rules) ---------------------
         if rule_result is not None:
+            self._deterministic_handled += 1
             decision = AgentDecision(
                 action=rule_result.action,
                 severity=rule_result.severity,
@@ -144,25 +165,30 @@ class PolicyAgent:
             logger.info("[Agent] Rule %s → %s", rule_result.rule_name, rule_result.action)
             return decision
 
-        # ---- Build session summary for Gemini ------------------------------
-        session_summary = self._build_session_summary(integrated, context_summary)
-        session_summary["risk_score"] = risk_score
-        session_summary["risk_components"] = risk_components
+        # ---- Stage B: Hybrid Agentic Reasoning on Confusing Outputs -------
+        is_confusing = self._is_confusing_evidence(integrated, context_summary, risk_score)
 
-        # ---- Try Gemini ----------------------------------------------------
-        gemini_result = None
-        if self.use_gemini and self._api_key:
-            gemini_result = self._call_gemini(session_summary, integrated)
+        if self.use_gemini and is_confusing:
+            self._confusing_dispatched += 1
+            session_summary = self._build_session_summary(integrated, context_summary)
+            session_summary["risk_score"] = risk_score
+            session_summary["risk_components"] = risk_components
 
-        # ---- Parse or fall back --------------------------------------------
-        if gemini_result and gemini_result.get("status") == "ok":
-            decision = self._parse_gemini(gemini_result["report"], integrated, context_summary)
-            self._gemini_calls += 1
+            llm_result = self._call_qwen(session_summary, integrated)
+            if llm_result and llm_result.get("status") == "ok":
+                decision = self._parse_llm_response(llm_result["report"], integrated, context_summary)
+                self._llm_calls += 1
+            else:
+                self._llm_errors += 1
+                decision = self._heuristic_decision(integrated, context_summary)
+                if llm_result and llm_result.get("status") == "error":
+                    decision.reason += f" [Qwen fallback: {llm_result.get('reason', '')}]"
         else:
+            # Deterministic clear-cut resolution
+            self._deterministic_handled += 1
             decision = self._heuristic_decision(integrated, context_summary)
-            if gemini_result and gemini_result.get("status") == "error":
-                self._gemini_errors += 1
-                decision.reason += f" [Gemini unavailable: {gemini_result.get('reason', '')}]"
+            if not is_confusing and self.use_gemini:
+                decision.source = "deterministic"
 
         decision.risk_score = risk_score
         decision.risk_components = risk_components
@@ -175,8 +201,7 @@ class PolicyAgent:
         ctx: dict,
     ) -> dict:
         """
-        Build the structured prompt payload sent to Gemini.
-        Gemini NEVER sees raw traffic — only model evidence.
+        Build the structured prompt payload sent to the LLM agent.
         """
         def _safe(record):
             if record is None:
@@ -218,7 +243,6 @@ class PolicyAgent:
         try:
             return json.loads(cleaned)
         except Exception:
-            # Fallback regex extraction if text was cut off or has minor syntax errors
             act_match = re.search(r'"action"\s*:\s*"([A-Za-z]+)"', cleaned)
             sev_match = re.search(r'"severity"\s*:\s*"([A-Za-z]+)"', cleaned)
             conf_match = re.search(r'"confidence"\s*:\s*([0-9.]+)', cleaned)
@@ -238,10 +262,8 @@ class PolicyAgent:
             raise
 
     # -----------------------------------------------------------------------
-    def _call_gemini(self, session_summary: dict, ev: IntegratedEvidence) -> dict:
-        """Send session summary to Gemini; return parsed result dict with retry and schema validation."""
-
-        # Build allowed attack types from model predictions only
+    def _call_qwen(self, session_summary: dict, ev: IntegratedEvidence) -> dict:
+        """Send session summary to local Qwen 2.5 7B Instruct via Ollama."""
         allowed_attacks = set()
         for record in ev.available_models():
             if record.normalised_family:
@@ -250,124 +272,76 @@ class PolicyAgent:
                 allowed_attacks.add(record.prediction)
 
         system_prompt = (
-            "You are the policy-reasoning layer of a network intrusion detection system. "
-            "The ML models have already made all attack predictions. "
-            "Your role is to reason over their combined evidence and decide an action.\n\n"
-            "RULES:\n"
+            "You are strictly the POLICY DECISION LAYER of a hybrid Network Intrusion Detection System.\n"
+            "CRITICAL ARCHITECTURAL CONTEXT:\n"
+            "1. You are NOT a traffic classifier. The 4 specialized ML models have already classified the traffic.\n"
+            "2. NEVER USE MAJORITY VOTING (do NOT count 3 vs 1 or 2 vs 2 models). In a multi-granular IDS, models inspect completely different granularities:\n"
+            "   - Packet 1D-CNN: L3/L4 header anomalies (SYN floods, port scans, invalid flags). Blind to multi-flow or session behaviors.\n"
+            "   - Flow XGBoost: Per-flow statistics (duration, IAT, packet size metrics). Catches brute force and single-flow DoS.\n"
+            "   - Session CNN-LSTM: Multi-flow sequential dynamics over time. Catches slow-rate attacks (Slowloris, SlowHTTPTest).\n"
+            "   - Time-Window XGBoost: Macro volumetric aggregate counters over 30s. Catches large distributed floods.\n"
+            "   Because granularities are asymmetric, stealthy or application-layer attacks (e.g., Slowloris, SQL injection) are often visible to ONLY ONE OR TWO specialized models, while aggregate models legitimately see benign background traffic. A high attack probability (e.g., P >= 0.70) from a specialized model MUST NOT be outvoted by benign votes from unrelated granularities.\n\n"
+            "PROBABILITY-BASED ARBITRATION RULES:\n"
+            "- ALLOW: Decide ALLOW only when ALL models report low attack probability (P < 0.35) or when non-zero detections are proven low-confidence background noise without corroboration.\n"
+            "- FLAG: Decide FLAG when a specialized model indicates a credible attack (P >= 0.70) while other models are blind to it, OR when models show genuine probability conflicts (0.35 <= P < 0.65) requiring human SOC analyst quarantine and triage.\n"
+            "- BLOCK: Decide BLOCK when high attack probability (P >= 0.70) is corroborated by multiple models, OR when a specialized model detects a severe attack with high probability (P >= 0.80) accompanied by fused risk >= 0.65, temporal persistence, or escalation.\n\n"
+            "CONSTRAINTS:\n"
             "1. Choose exactly one action: ALLOW, FLAG, or BLOCK.\n"
-            "2. attack_family MUST come from: " + json.dumps(sorted(allowed_attacks)) + " or null if benign.\n"
-            "3. Do NOT invent attack types or change predicted labels.\n"
-            "4. Return ONLY strict JSON with these exact keys: "
+            "2. attack_family MUST be one of: " + json.dumps(sorted(allowed_attacks)) + " or null if ALLOW/benign.\n"
+            "3. Return ONLY strict JSON with these exact keys: "
             "action, severity, attack_family, confidence, reason, evidence_used, recommended_actions.\n"
-            "5. severity must be: LOW, MEDIUM, HIGH, or CRITICAL.\n"
-            "6. confidence is a float 0.0-1.0.\n"
+            "4. severity must be: LOW, MEDIUM, HIGH, or CRITICAL.\n"
+            "5. confidence is a float 0.0-1.0 representing your confidence in this policy decision.\n"
+            "6. In 'reason', explicitly cite the specific model probabilities and domain specialization that justified your decision, proving no majority voting was used.\n"
         )
+
+        user_prompt = "EVIDENCE SUMMARY:\n" + json.dumps(session_summary, default=str) + "\n\nDecide action and return strict JSON:"
 
         payload = {
-            "contents": [{
-                "parts": [{
-                    "text": system_prompt + "\n\nEVIDENCE:\n" + json.dumps(session_summary, default=str)
-                }]
-            }],
-            "generationConfig": {
-                "responseMimeType": "application/json",
+            "model": self.llm_model,
+            "prompt": system_prompt + "\n\n" + user_prompt,
+            "stream": False,
+            "format": "json",
+            "options": {
                 "temperature": 0.1,
-                "maxOutputTokens": 1024,
-                "responseSchema": {
-                    "type": "OBJECT",
-                    "properties": {
-                        "action": {
-                            "type": "STRING",
-                            "enum": ["ALLOW", "FLAG", "BLOCK"]
-                        },
-                        "severity": {
-                            "type": "STRING",
-                            "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
-                        },
-                        "attack_family": {
-                            "type": "STRING"
-                        },
-                        "confidence": {
-                            "type": "NUMBER"
-                        },
-                        "reason": {
-                            "type": "STRING"
-                        },
-                        "evidence_used": {
-                            "type": "ARRAY",
-                            "items": {"type": "STRING"}
-                        },
-                        "recommended_actions": {
-                            "type": "ARRAY",
-                            "items": {"type": "STRING"}
-                        }
-                    },
-                    "required": ["action", "severity", "confidence", "reason"]
-                }
-            },
+                "num_predict": 384,
+                "num_ctx": 1536,
+            }
         }
 
-        url = (
-            f"https://generativelanguage.googleapis.com/v1beta/models/"
-            f"{self._model}:generateContent"
-        )
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(payload).encode(),
-            headers={
-                "Content-Type": "application/json",
-                "x-goog-api-key": self._api_key,
-            },
-        )
+        try:
+            req = urllib.request.Request(
+                self.ollama_url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"}
+            )
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                body = json.loads(resp.read().decode("utf-8"))
 
-        max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                with urllib.request.urlopen(req, timeout=30) as resp:
-                    body = json.loads(resp.read().decode())
+            text = body.get("response", "")
+            if not text:
+                return {"status": "error", "reason": "Empty response from Qwen local model"}
 
-                candidates = body.get("candidates", [])
-                if not candidates or "content" not in candidates[0]:
-                    finish_reason = candidates[0].get("finishReason", "UNKNOWN") if candidates else "NO_CANDIDATES"
-                    return {"status": "error", "reason": f"No content returned (finishReason: {finish_reason})"}
-
-                parts = candidates[0]["content"].get("parts", [])
-                if not parts or "text" not in parts[0]:
-                    return {"status": "error", "reason": "No text in Gemini response candidate parts"}
-
-                text = parts[0]["text"]
-                report = self._clean_and_parse_json(text)
-                return {"status": "ok", "report": report}
-
-            except urllib.error.HTTPError as e:
-                details = e.read().decode("utf-8", errors="replace")[:500]
-                if e.code == 429 and attempt < max_retries - 1:
-                    sleep_time = (2 ** attempt) * 2.5
-                    logger.warning("[PolicyAgent] HTTP 429 rate limit hit. Retrying in %.1fs (attempt %d/%d)...", sleep_time, attempt + 1, max_retries)
-                    time.sleep(sleep_time)
-                    continue
-                return {"status": "error", "reason": f"HTTP {e.code}: {details}"}
-            except Exception as e:
-                return {"status": "error", "reason": str(e)}
-
-        return {"status": "error", "reason": "Max retries exceeded"}
+            report = self._clean_and_parse_json(text)
+            return {"status": "ok", "report": report}
+        except Exception as e:
+            logger.warning("[PolicyAgent] Qwen inference error: %s", e)
+            return {"status": "error", "reason": str(e)}
 
     # -----------------------------------------------------------------------
-    def _parse_gemini(
+    def _parse_llm_response(
         self,
         report: dict,
         ev: IntegratedEvidence,
         ctx: dict,
     ) -> AgentDecision:
-        """Parse and validate Gemini's JSON response."""
-
+        """Parse and validate LLM's JSON response."""
         action   = str(report.get("action", "FLAG")).upper()
         severity = str(report.get("severity", "MEDIUM")).upper()
 
         if action   not in VALID_ACTIONS:    action   = "FLAG"
         if severity not in VALID_SEVERITIES: severity = "MEDIUM"
 
-        # Validate attack_family — must come from model predictions
         allowed_families = {
             r.normalised_family for r in ev.available_models()
             if r.normalised_family
@@ -386,7 +360,7 @@ class PolicyAgent:
             reason=str(report.get("reason", "")),
             evidence_used=list(report.get("evidence_used", [])),
             recommended_actions=list(report.get("recommended_actions", [])),
-            source="gemini",
+            source="qwen-2.5-7b",
             context_snapshot=ctx,
             gemini_raw=report,
         )
@@ -410,12 +384,18 @@ class PolicyAgent:
             "NONE": 0.0, "LOW": 0.1, "MEDIUM": 0.3, "HIGH": 0.6, "CRITICAL": 1.0
         }.get(esc_level, 0.0)
 
+        # Contextual amplification: persistence & escalation amplify active suspicion,
+        # but must not turn unambiguously benign traffic into a false alarm
+        if attack_prob < 0.35 and (agreement <= 0.25 or ev.models_indicating_attack == 0):
+            persistence = 0.0
+            esc_weight = 0.0
+
         # Flow density from supporting evidence if available
         flow_density = 0.0
         if ev.flow and ev.flow.supporting_evidence:
             flow_density = float(ev.flow.supporting_evidence.get("fraction_attack_gt_070", 0.0))
 
-        # Model availability coverage (e.g. 2/4 = 0.5 currently)
+        # Model availability coverage
         model_coverage = float(ev.models_available) / 4.0
 
         risk = (
@@ -444,13 +424,21 @@ class PolicyAgent:
         ctx: dict,
     ) -> AgentDecision:
         """
-        Fallback deterministic policy reasoning based on dynamic risk score.
+        Deterministic policy reasoning based on dynamic risk score.
         """
         risk_score, risk_components = self._compute_risk_score(ev, ctx)
 
         if risk_score >= self.block_t:
-            action = "BLOCK"
-            sev = "CRITICAL" if risk_score >= 0.85 else "HIGH"
+            families = [
+                r.normalised_family for r in [ev.packet, ev.flow, ev.time_window, ev.session]
+                if r and r.is_attack and r.normalised_family
+            ]
+            if len(set(families)) > 1:
+                action = "FLAG"
+                sev = "HIGH"
+            else:
+                action = "BLOCK"
+                sev = "CRITICAL" if risk_score >= 0.85 else "HIGH"
         elif risk_score >= self.flag_t:
             action = "FLAG"
             sev = "MEDIUM"
@@ -494,7 +482,11 @@ class PolicyAgent:
     @property
     def stats(self) -> dict:
         return {
-            "gemini_calls": self._gemini_calls,
-            "gemini_errors": self._gemini_errors,
+            "gemini_calls": self._llm_calls,
+            "gemini_errors": self._llm_errors,
+            "llm_calls": self._llm_calls,
+            "llm_errors": self._llm_errors,
+            "llm_model": self.llm_model,
+            "confusing_cases_dispatched": self._confusing_dispatched,
+            "deterministic_handled": self._deterministic_handled,
         }
-

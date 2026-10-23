@@ -27,6 +27,10 @@ nids/validation_results/*.json
 reports/decision_*.json
 reports/*.csv
 reports/*.jsonl
+reports/ciciot2023_integrated_validation_report.json
+reports/cicids2018_fused_probabilities_4models.json
+reports/cicids2018_hybrid_4models_with_qwen2.5.json
+reports/temp_day_*.json
 nids_pipeline_report.json
 
 # Python cache
