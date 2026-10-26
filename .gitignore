@@ -36,3 +36,6 @@ nids_pipeline_report.json
 # Python cache
 __pycache__/
 *.pyc
+
+# Data cache
+data_cache/

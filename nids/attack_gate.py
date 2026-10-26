@@ -125,7 +125,8 @@ class AttackGate:
 
                 # Confidence modulation: high confidence → higher weight
                 # Use sigmoid-like scaling so mid-confidence doesn't dominate
-                conf_factor = 0.5 + 0.5 * math.tanh((record.confidence - 0.5) * 4)
+                binary_conf = max(record.attack_probability, 1.0 - record.attack_probability)
+                conf_factor = 0.5 + 0.5 * math.tanh((binary_conf - 0.5) * 4)
 
                 w = base_w * conf_factor
                 total_weight += w

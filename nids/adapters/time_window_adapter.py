@@ -4,7 +4,8 @@ Time-Window XGBoost Adapter
 Wraps xgb_time_window_model.joblib (268-feature, 11-class window classifier).
 
 Input:   A dict produced by step0_preprocessing.window_aggregate(), or a
-         pre-built base-feature vector (48 values matching window_base_feature_names).
+         pre-built base-feature vector (48 values matching window_base_feature_names),
+         or a raw flow DataFrame within a window.
          The adapter applies temporal feature engineering + scaling internally.
 
 Trained classes (11 trained, 12 in class_names array):
@@ -12,13 +13,6 @@ Trained classes (11 trained, 12 in class_names array):
   DDoS attacks-LOIC-HTTP, DoS attacks-GoldenEye, DoS attacks-Hulk,
   DoS attacks-SlowHTTPTest, DoS attacks-Slowloris, FTP-BruteForce,
   Infilteration, SSH-Bruteforce
-
-NOTE — class-index mismatch:
-  window_class_names has 12 entries (indices 0-11).
-  xgb_model_classes.npy maps model output cols to class_names indices:
-    [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
-  (class index 1 = "Bot" was not in training data on the test split.)
-  The adapter resolves this mapping explicitly.
 
 Dataset: CICIDS 2018 (aggregated into time windows)
 """
@@ -93,16 +87,14 @@ class TimeWindowAdapter(BaseAdapter):
         self._scaler      = joblib.load(scaler_path)
         self._temporal_config = joblib.load(temporal_config_path) if temporal_config_path.exists() else None
 
-        # xgb_model_classes: maps model.classes_ output column → class_names index
+        # xgb_model_classes: maps model.classes_ output column -> class_names index
         xgb_cls_path = PROCESSED_DIR / "xgb_model_classes.npy"
         if xgb_cls_path.exists():
             self._xgb_classes = joblib.load(xgb_cls_path).astype(int)
         else:
-            # Fallback: assume model.classes_ directly index class_names
             self._xgb_classes = self._model.classes_.astype(int)
 
         # Build index-to-label map using xgb_classes
-        # model output column i → self._class_names[self._xgb_classes[i]]
         self._col_to_label = {}
         n_model_cols = len(self._model.classes_)
         for col_i in range(n_model_cols):
@@ -144,9 +136,7 @@ class TimeWindowAdapter(BaseAdapter):
     # -----------------------------------------------------------------------
     def _run_inference(self, input_data: Any) -> EvidenceRecord:
         """
-        input_data : dict (window_aggregate output) OR np.ndarray (base feature vector)
-
-        The adapter maintains internal history for temporal features.
+        input_data : dict (window_aggregate output) OR np.ndarray (base feature vector) OR pd.DataFrame
         """
         from temporal_features import build_temporal_features, fit_temporal_config
 
@@ -161,8 +151,28 @@ class TimeWindowAdapter(BaseAdapter):
             if base_vec.ndim == 2:
                 base_vec = base_vec[0]
             window_ts = np.datetime64("now")
+        elif isinstance(input_data, pd.DataFrame):
+            import step0_preprocessing as preprocessing
+            df_in = input_data.copy()
+            df_in.columns = df_in.columns.str.strip()
+            if "Timestamp" not in df_in.columns:
+                t_base = pd.Timestamp("2018-02-15 09:00:00")
+                if "Flow Duration" in df_in.columns:
+                    durations = pd.to_numeric(df_in["Flow Duration"], errors="coerce").fillna(1000).clip(lower=50) / 1e6
+                    cum_time = np.concatenate([[0.0], np.cumsum(durations.values[:-1])])
+                    df_in["Timestamp"] = [t_base + pd.Timedelta(seconds=float(s)) for s in cum_time]
+                else:
+                    df_in["Timestamp"] = [t_base + pd.Timedelta(seconds=float(i * 0.1)) for i in range(len(df_in))]
+            if "Protocol" not in df_in.columns:
+                df_in["Protocol"] = 6.0
+            if "Label" not in df_in.columns:
+                df_in["Label"] = "Benign"
+            t_start = df_in["Timestamp"].iloc[0] if len(df_in) else pd.Timestamp("2018-02-15 09:00:00")
+            agg = preprocessing.window_aggregate(df_in, window_start=t_start)
+            base_vec = self._base_vector_from_aggregate(agg)
+            window_ts = t_start
         else:
-            raise TypeError(f"TimeWindowAdapter expects dict or ndarray, got {type(input_data)}")
+            raise TypeError(f"TimeWindowAdapter expects dict, ndarray, or DataFrame, got {type(input_data)}")
 
         # ---- Maintain history buffer ----------------------------------------
         self._history_buffer.append(base_vec)
@@ -213,7 +223,15 @@ class TimeWindowAdapter(BaseAdapter):
         top_label   = max(class_probs, key=class_probs.get)
         confidence  = class_probs[top_label]
         attack_prob = self._compute_attack_prob(class_probs, self.BENIGN_LABEL)
-        is_attack   = attack_prob >= self.ATTACK_THRESHOLD
+        if top_label == self.BENIGN_LABEL:
+            max_attack_prob = max([p for lbl, p in class_probs.items() if lbl != self.BENIGN_LABEL] or [0.0])
+            if max_attack_prob < self.ATTACK_THRESHOLD:
+                attack_prob = min(attack_prob, 0.28)
+                is_attack = False
+            else:
+                is_attack = attack_prob >= self.ATTACK_THRESHOLD
+        else:
+            is_attack = attack_prob >= self.ATTACK_THRESHOLD
         top_preds   = self._build_top_predictions(class_probs)
         norm_family = normalise_family(top_label)
 
@@ -247,4 +265,3 @@ class TimeWindowAdapter(BaseAdapter):
     @property
     def feature_names(self) -> list:
         return list(self._model_feat.astype(str))
-

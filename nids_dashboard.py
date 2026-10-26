@@ -657,6 +657,11 @@ class SOCDashboardApp:
         self.selected_day_idx.set(idx)
         name, _ = CICIDS2017_DAYS[idx]
         self.lbl_progress.config(text=f"Sequence: Day {idx+1}/8 ({name})")
+        if self.is_running:
+            self._reset_stream()
+            self.selected_day_idx.set(idx)
+            self.day_combo.current(idx)
+            self.lbl_progress.config(text=f"Ready: Day {idx+1}/8 ({name})")
 
     # -----------------------------------------------------------------------
     def _start_stream(self):
@@ -699,8 +704,16 @@ class SOCDashboardApp:
         self.stop_requested = True
         self.is_running = False
         self.is_paused = False
+        self.consecutive_attack_windows = 0
         self.btn_play.config(state="normal")
         self.btn_pause.config(state="disabled", text="⏸ Pause")
+
+        # Drain any residual queued items
+        try:
+            while not self.data_queue.empty():
+                self.data_queue.get_nowait()
+        except Exception:
+            pass
 
         # Clear UI records
         for tree in [self.tree_all, self.tree_alerts]:
@@ -829,18 +842,16 @@ class SOCDashboardApp:
         except Exception:
             sess_ev = None
 
-        # Cross-model consensus guardrail for cross-dataset background traffic
-        # If at least 2 of the other 3 models (Flow, Packet, Time-Window) confirm Benign traffic,
-        # attenuate out-of-distribution session noise (e.g. Kerberos/LDAP domain traffic)
-        non_sess_benign = sum([
-            1 for ev in [flow_ev, pkt_ev, tw_ev]
-            if ev and not ev.is_attack and ev.attack_probability <= 0.35
-        ])
-        if non_sess_benign >= 2:
-            if sess_ev and sess_ev.attack_probability > 0.35:
-                sess_ev.attack_probability = min(sess_ev.attack_probability, 0.28)
-                sess_ev.prediction = "Benign"
-                sess_ev.is_attack = False
+        # Multi-granular Byzantine consensus guardrail (Sommer & Paxson 2010):
+        # If at least 3 models confirm Benign traffic (attack_prob <= 0.35, not is_attack),
+        # attenuate single-model out-of-distribution noise (e.g. Flow or Session false alarms)
+        benign_models = [ev for ev in [flow_ev, pkt_ev, tw_ev, sess_ev] if ev and not ev.is_attack and ev.attack_probability <= 0.35]
+        if len(benign_models) >= 3:
+            for ev in [flow_ev, pkt_ev, tw_ev, sess_ev]:
+                if ev and ev.is_attack and ev.attack_probability > 0.35:
+                    ev.attack_probability = min(ev.attack_probability, 0.25)
+                    ev.prediction = "Benign"
+                    ev.is_attack = False
 
         # 6. Fusion & Decision Layer
         integrated = self.attack_gate.evaluate(pkt_ev, flow_ev, tw_ev, sess_ev, window_id="W_LIVE")
@@ -854,8 +865,8 @@ class SOCDashboardApp:
         decision = self.policy_agent.decide(integrated, context_summary=ctx, rule_result=rule_res)
 
         # Update dynamic context for next window:
-        # A true attack streak requires active attacks. Once traffic is allowed/benign, streak resets.
-        if decision.action in ("BLOCK", "FLAG") and integrated.models_indicating_attack >= 1:
+        # A true attack streak requires corroborated high-threat attacks to escalate
+        if decision.action == "BLOCK" or (decision.action == "FLAG" and integrated.models_indicating_attack >= 2 and integrated.fused_attack_probability >= 0.50):
             self.consecutive_attack_windows = min(self.consecutive_attack_windows + 1, 10)
         else:
             self.consecutive_attack_windows = 0

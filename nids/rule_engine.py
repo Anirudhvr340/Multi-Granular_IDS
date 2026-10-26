@@ -77,7 +77,7 @@ class RuleConfig:
 
     # Rule 6: Moderate evidence — FLAG (calibrated)
     r6_enabled: bool  = True
-    r6_min_prob: float = 0.45        # shifted from 0.35 to 0.45
+    r6_min_prob: float = 0.38        # calibrated to intercept multi-model attacks (P >= 0.38)
     r6_max_prob: float = 0.65        # shifted from 0.60 to 0.65
 
 

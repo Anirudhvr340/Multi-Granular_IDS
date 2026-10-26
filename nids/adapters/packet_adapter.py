@@ -1,14 +1,14 @@
 """
-Packet-Level Model Adapter (Keras 3 1D-CNN)
+Packet-Level Model Adapter (PyTorch 1D-CNN)
 ===========================================
-Ingests per-flow traffic DataFrames within a time window, derives 27 dimensionless
-packet-header and TCP flag symmetry ratios, and applies the trained regularized 1D-CNN
-plus Platt scaling calibrator.
+Ingests per-flow traffic DataFrames within a time window, derives 35 dimensionless
+packet-header and TCP flag symmetry ratios, and applies the trained regularized PyTorch 1D-CNN
+with Temperature Scaling calibration.
 
 Academic Citations:
   - Lotfollahi et al. (2020) — "Deep Packet: A Novel Deep Learning Approach for Encrypted Traffic Classification"
   - Wang et al. (2017) — "End-to-end Traffic Classification with 1D-CNN"
-  - Platt (1999) — "Probabilistic Outputs for Support Vector Machines and Comparisons to Regularized Likelihood Methods"
+  - Guo et al. (2017) — "On Calibration of Modern Neural Networks" (ICML)
 """
 
 from __future__ import annotations
@@ -22,12 +22,8 @@ from typing import Any, List, Optional
 import joblib
 import numpy as np
 import pandas as pd
-
-os.environ.setdefault("KERAS_BACKEND", "torch")
-try:
-    import keras
-except ImportError:
-    import tensorflow.keras as keras
+import torch
+import torch.nn as nn
 
 from nids.adapters.base_adapter import BaseAdapter
 from nids.evidence_schema import (
@@ -39,12 +35,12 @@ PACKET_DIR = HERE / "packet_level"
 if str(PACKET_DIR) not in sys.path:
     sys.path.insert(0, str(PACKET_DIR))
 
-from train_packet_1d_cnn import extract_dimensionless_packet_features
+from train_pytorch_packet_1d_cnn import Packet1DCNN, extract_dimensionless_packet_features
 
 
 class PacketModelAdapter(BaseAdapter):
     """
-    Adapter for the Packet-Level 1D-CNN model.
+    Adapter for the Packet-Level PyTorch 1D-CNN model.
     """
 
     MODEL_NAME   = "Packet 1D-CNN"
@@ -58,27 +54,39 @@ class PacketModelAdapter(BaseAdapter):
     ):
         super().__init__(attack_threshold)
         self.model_dir = Path(model_dir) if model_dir else PACKET_DIR
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self._load_artifacts()
 
     def _load_artifacts(self):
-        model_path = self.model_dir / "cnn_packet_model.keras"
+        model_path = self.model_dir / "cnn_packet_model.pth"
         scaler_path = self.model_dir / "cnn_scaler.pkl"
         labels_path = self.model_dir / "cnn_labels.pkl"
         features_path = self.model_dir / "cnn_packet_features.pkl"
-        calibrator_path = self.model_dir / "cnn_calibrator_lr.pkl"
+        temp_path = self.model_dir / "cnn_temperature.pkl"
 
         if not model_path.exists():
             raise FileNotFoundError(f"Packet model not found at {model_path}")
 
-        self.model = keras.models.load_model(str(model_path))
         self.scaler = joblib.load(scaler_path)
         self.le = joblib.load(labels_path)
         self.features = joblib.load(features_path)
-        self.calibrator = joblib.load(calibrator_path)
-        if not hasattr(self.calibrator, "multi_class"):
-            self.calibrator.multi_class = "deprecated"
-
         self.classes = [str(c) for c in self.le.classes_]
+
+        if temp_path.exists():
+            t_data = joblib.load(temp_path)
+            self.temperature = float(t_data.get("temperature", 1.0))
+        else:
+            self.temperature = 1.0
+
+        self.model = Packet1DCNN(
+            in_features=len(self.features),
+            n_classes=len(self.classes)
+        ).to(self.device)
+
+        state_dict = torch.load(model_path, map_location=self.device)
+        self.model.load_state_dict(state_dict)
+        self.model.eval()
+
         self._benign_idx = (
             self.classes.index(self.BENIGN_LABEL)
             if self.BENIGN_LABEL in self.classes
@@ -109,6 +117,9 @@ class PacketModelAdapter(BaseAdapter):
         else:
             raise TypeError(f"PacketModelAdapter accepts DataFrame or dict, got {type(input_data)}")
 
+        # Strip whitespace from columns to support both 2017 and 2018 formats
+        df.columns = df.columns.str.strip()
+
         feats_df, _ = extract_dimensionless_packet_features(df)
         for col in self.features:
             if col not in feats_df.columns:
@@ -117,12 +128,15 @@ class PacketModelAdapter(BaseAdapter):
         X = feats_df[self.features].values.astype(np.float32)
         X = np.nan_to_num(X, nan=0.0, posinf=0.0, neginf=0.0)
 
-        # Scale and reshape for 1D-CNN
+        # Scale for 1D-CNN
         X_sc = self.scaler.transform(X)
-        X_cnn = X_sc.reshape(X_sc.shape[0], X_sc.shape[1], 1)
 
-        raw_probs = self.model.predict(X_cnn, batch_size=512, verbose=0)
-        cal_probs = self.calibrator.predict_proba(raw_probs)
+        with torch.no_grad():
+            tensor_x = torch.tensor(X_sc, dtype=torch.float32).to(self.device)
+            logits = self.model(tensor_x)
+            cal_logits = logits / self.temperature
+            cal_probs = torch.softmax(cal_logits, dim=-1).cpu().numpy()
+
         mean_class_probs = cal_probs.mean(axis=0)
 
         # Extract attack probability per packet/flow: 1 - P(benign)
@@ -136,7 +150,7 @@ class PacketModelAdapter(BaseAdapter):
         frac_attack = float(np.mean(per_pkt_attack >= self.ATTACK_THRESHOLD))
 
         # Density-aware window pooling: require genuine attack density to override benign majority
-        if mean_benign >= 0.50 and frac_70 < 0.20:
+        if mean_benign >= 0.50 and frac_70 < 0.20 and frac_attack < 0.40 and mean_attack < 0.33:
             window_p_attack = min(mean_attack, 0.25)
             is_attack = False
             pred_idx = self._benign_idx

@@ -385,8 +385,8 @@ class PolicyAgent:
         }.get(esc_level, 0.0)
 
         # Contextual amplification: persistence & escalation amplify active suspicion,
-        # but must not turn unambiguously benign traffic into a false alarm
-        if attack_prob < 0.35 and (agreement <= 0.25 or ev.models_indicating_attack == 0):
+        # but must not turn low-probability or uncorroborated traffic into a false alarm
+        if attack_prob < 0.45 or agreement <= 0.25 or ev.models_indicating_attack <= 1:
             persistence = 0.0
             esc_weight = 0.0
 
