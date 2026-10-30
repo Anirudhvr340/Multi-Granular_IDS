@@ -102,20 +102,35 @@ class AttackGate:
             if r is not None and r.status == STATUS_OK
         }
 
-        # ---- Weighted fusion of attack probabilities -----------------------
+        # Multi-granular Byzantine consensus guardrail (Sommer & Paxson 2010):
+        # If at least 3 models confirm Benign traffic (attack_prob <= self.threshold, not is_attack),
+        # attenuate single-model out-of-distribution noise (e.g. Flow or Session false alarms)
+        benign_models = [
+            r for r in available_ok.values()
+            if not r.is_attack and r.attack_probability <= self.threshold
+        ]
+        if len(benign_models) >= 3:
+            for r in available_ok.values():
+                if r.is_attack and r.attack_probability > self.threshold:
+                    r.attack_probability = min(r.attack_probability, 0.25)
+                    r.prediction = 'Benign'
+                    r.is_attack = False
+
+        # ---- Weighted fusion of attack probabilities with Situational Adaptation ----
         fused_attack_prob = 0.0
         models_attacking  = 0
+        raw_weights = {}
+        normalized_weights: dict[str, float] = {}
 
         if available_ok:
             total_weight = 0.0
-            weighted_sum = 0.0
 
             for granularity, record in available_ok.items():
-                # Base weight from granularity
+                # 1. Base prior weight from granularity
                 base_w = _GRANULARITY_BASE_WEIGHT.get(granularity, 0.25)
 
-                # Dynamic session sparsity attenuation:
-                # A 30-flow sequential model cannot form a valid sequence on sparse windows
+                # 2. Dynamic session sparsity attenuation:
+                # A 30-flow sequential BiLSTM requires sufficient sequence continuity
                 if granularity == GRANULARITY_SESSION:
                     n_f = record.supporting_evidence.get("flows_in_window", 30) if record.supporting_evidence else 30
                     if n_f < 5:
@@ -123,19 +138,40 @@ class AttackGate:
                     elif n_f < 15:
                         base_w *= 0.50  # De-weight sparse partial windows
 
-                # Confidence modulation: high confidence → higher weight
-                # Use sigmoid-like scaling so mid-confidence doesn't dominate
+                # 3. Dynamic Time-Window temporal buffer maturity:
+                # Macro temporal lag/trend features need rolling history to avoid cold-start noise
+                elif granularity == GRANULARITY_WINDOW:
+                    h_depth = record.supporting_evidence.get("history_depth", 5) if record.supporting_evidence else 5
+                    if h_depth < 3:
+                        base_w *= 0.40  # De-weight cold-start window models
+                    elif h_depth >= 5:
+                        base_w *= 1.10  # Mature temporal rolling stats
+
+                # 4. Dynamic Packet 1D-CNN volumetric specialization:
+                # Dimensionless packet ratios are primary sensors for high-rate flood anomalies
+                elif granularity == GRANULARITY_PACKET:
+                    if record.is_attack and record.attack_probability >= 0.80:
+                        base_w *= 1.25  # Boost packet sensor on confirmed packet header anomalies
+
+                # 5. Dynamic Confidence modulation:
+                # High confidence (close to 0.0 or 1.0) gets higher weight; ambiguous (0.50) is penalized
                 binary_conf = max(record.attack_probability, 1.0 - record.attack_probability)
                 conf_factor = 0.5 + 0.5 * math.tanh((binary_conf - 0.5) * 4)
 
                 w = base_w * conf_factor
+                raw_weights[granularity] = w
                 total_weight += w
-                weighted_sum += w * record.attack_probability
 
                 if record.attack_probability >= self.threshold:
                     models_attacking += 1
 
-            fused_attack_prob = weighted_sum / total_weight if total_weight > 0 else 0.0
+            if total_weight > 0:
+                weighted_sum = sum(w * available_ok[g].attack_probability for g, w in raw_weights.items())
+                fused_attack_prob = weighted_sum / total_weight
+                normalized_weights = {g: round(w / total_weight, 4) for g, w in raw_weights.items()}
+            else:
+                fused_attack_prob = 0.0
+                normalized_weights = {g: 0.25 for g in available_ok}
 
         # ---- Agreement score -----------------------------------------------
         n_avail = len(available_ok)
@@ -154,6 +190,7 @@ class AttackGate:
             model_agreement_score=round(model_agreement, 4),
             models_indicating_attack=models_attacking,
             models_available=n_avail,
+            model_weights=normalized_weights,
             window_id=window_id,
         )
 

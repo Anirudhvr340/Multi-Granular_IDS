@@ -172,6 +172,7 @@ class IntegratedEvidence:
     model_agreement_score: float = 0.0   # 0-1
     models_indicating_attack: int = 0
     models_available: int = 0
+    model_weights: Dict[str, float] = field(default_factory=dict)
 
     timestamp: float = field(default_factory=time.time)
     window_id: Optional[str] = None
@@ -202,6 +203,7 @@ class IntegratedEvidence:
             "model_agreement_score":    round(self.model_agreement_score, 4),
             "models_indicating_attack": self.models_indicating_attack,
             "models_available":         self.models_available,
+            "model_weights":            self.model_weights,
             "timestamp":               self.timestamp,
             "window_id":               self.window_id,
         }

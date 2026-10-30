@@ -1,0 +1,326 @@
+{
+  "benchmark_timestamp": "2026-10-28T13:47:32Z",
+  "hardware": "NVIDIA GeForce RTX 4090 (24 GB VRAM)",
+  "environment": "C:\\Summer_Internship\\venv\\Scripts\\python.exe",
+  "sample_size": {
+    "cicids2018_windows": 83,
+    "cicids2018_flows": 4980,
+    "cicids2017_windows": 72,
+    "cicids2017_flows": 4320
+  },
+  "metrics_cicids2018": {
+    "packet": {
+      "tp": 71,
+      "fp": 2,
+      "fn": 0,
+      "tn": 10,
+      "accuracy": 0.9759036144578314,
+      "precision": 0.9726027397260274,
+      "recall": 1.0,
+      "f1": 0.9861111111111112,
+      "fpr": 0.16666666666666666,
+      "per_class_recall": {
+        "FTP-BruteForce": 1.0,
+        "SSH-Bruteforce": 1.0,
+        "DoS attacks-GoldenEye": 1.0,
+        "DoS attacks-Slowloris": 1.0,
+        "DoS attacks-SlowHTTPTest": 1.0,
+        "DoS attacks-Hulk": 1.0,
+        "DDOS attack-HOIC": 1.0,
+        "DDOS attack-LOIC-UDP": 1.0,
+        "DDoS attacks-LOIC-HTTP": 1.0,
+        "Brute Force -Web": 1.0,
+        "Brute Force -XSS": 1.0,
+        "Infilteration": 1.0,
+        "Bot": 1.0
+      }
+    },
+    "flow": {
+      "tp": 71,
+      "fp": 10,
+      "fn": 0,
+      "tn": 2,
+      "accuracy": 0.8795180722891566,
+      "precision": 0.8765432098765432,
+      "recall": 1.0,
+      "f1": 0.9342105263157895,
+      "fpr": 0.8333333333333334,
+      "per_class_recall": {
+        "FTP-BruteForce": 1.0,
+        "SSH-Bruteforce": 1.0,
+        "DoS attacks-GoldenEye": 1.0,
+        "DoS attacks-Slowloris": 1.0,
+        "DoS attacks-SlowHTTPTest": 1.0,
+        "DoS attacks-Hulk": 1.0,
+        "DDOS attack-HOIC": 1.0,
+        "DDOS attack-LOIC-UDP": 1.0,
+        "DDoS attacks-LOIC-HTTP": 1.0,
+        "Brute Force -Web": 1.0,
+        "Brute Force -XSS": 1.0,
+        "Infilteration": 1.0,
+        "Bot": 1.0
+      }
+    },
+    "time_window": {
+      "tp": 20,
+      "fp": 5,
+      "fn": 51,
+      "tn": 7,
+      "accuracy": 0.3253012048192771,
+      "precision": 0.8,
+      "recall": 0.28169014084507044,
+      "f1": 0.4166666666666667,
+      "fpr": 0.4166666666666667,
+      "per_class_recall": {
+        "FTP-BruteForce": 1.0,
+        "SSH-Bruteforce": 0.0,
+        "DoS attacks-GoldenEye": 0.3333333333333333,
+        "DoS attacks-Slowloris": 0.0,
+        "DoS attacks-SlowHTTPTest": 1.0,
+        "DoS attacks-Hulk": 0.0,
+        "DDOS attack-HOIC": 0.0,
+        "DDOS attack-LOIC-UDP": 1.0,
+        "DDoS attacks-LOIC-HTTP": 0.0,
+        "Brute Force -Web": 0.0,
+        "Brute Force -XSS": 0.0,
+        "Infilteration": 0.0,
+        "Bot": 0.0
+      }
+    },
+    "session": {
+      "tp": 65,
+      "fp": 0,
+      "fn": 6,
+      "tn": 12,
+      "accuracy": 0.927710843373494,
+      "precision": 1.0,
+      "recall": 0.9154929577464789,
+      "f1": 0.9558823529411764,
+      "fpr": 0.0,
+      "per_class_recall": {
+        "FTP-BruteForce": 1.0,
+        "SSH-Bruteforce": 1.0,
+        "DoS attacks-GoldenEye": 1.0,
+        "DoS attacks-Slowloris": 1.0,
+        "DoS attacks-SlowHTTPTest": 1.0,
+        "DoS attacks-Hulk": 1.0,
+        "DDOS attack-HOIC": 1.0,
+        "DDOS attack-LOIC-UDP": 1.0,
+        "DDoS attacks-LOIC-HTTP": 1.0,
+        "Brute Force -Web": 1.0,
+        "Brute Force -XSS": 1.0,
+        "Infilteration": 0.0,
+        "Bot": 1.0
+      }
+    },
+    "fused": {
+      "tp": 70,
+      "fp": 6,
+      "fn": 1,
+      "tn": 6,
+      "accuracy": 0.9156626506024096,
+      "precision": 0.9210526315789473,
+      "recall": 0.9859154929577465,
+      "f1": 0.9523809523809524,
+      "fpr": 0.5,
+      "per_class_recall": {
+        "FTP-BruteForce": 1.0,
+        "SSH-Bruteforce": 1.0,
+        "DoS attacks-GoldenEye": 1.0,
+        "DoS attacks-Slowloris": 1.0,
+        "DoS attacks-SlowHTTPTest": 1.0,
+        "DoS attacks-Hulk": 1.0,
+        "DDOS attack-HOIC": 1.0,
+        "DDOS attack-LOIC-UDP": 1.0,
+        "DDoS attacks-LOIC-HTTP": 1.0,
+        "Brute Force -Web": 1.0,
+        "Brute Force -XSS": 1.0,
+        "Infilteration": 0.8333333333333334,
+        "Bot": 1.0
+      }
+    }
+  },
+  "metrics_cicids2017": {
+    "packet": {
+      "tp": 48,
+      "fp": 0,
+      "fn": 12,
+      "tn": 12,
+      "accuracy": 0.8333333333333334,
+      "precision": 1.0,
+      "recall": 0.8,
+      "f1": 0.888888888888889,
+      "fpr": 0.0,
+      "per_class_recall": {
+        "FTP-BruteForce": 0.8333333333333334,
+        "SSH-Bruteforce": 1.0,
+        "DoS attacks-GoldenEye": 1.0,
+        "DoS attacks-Hulk": 1.0,
+        "DoS attacks-SlowHTTPTest": 1.0,
+        "DoS attacks-Slowloris": 1.0,
+        "DDOS attack-HOIC": 1.0,
+        "PortScan": 1.0,
+        "Bot": 0.0,
+        "Infilteration": 0.0,
+        "SQL Injection": 1.0,
+        "Brute Force -Web": 0.0,
+        "Brute Force -XSS": 0.0
+      }
+    },
+    "flow": {
+      "tp": 60,
+      "fp": 6,
+      "fn": 0,
+      "tn": 6,
+      "accuracy": 0.9166666666666666,
+      "precision": 0.9090909090909091,
+      "recall": 1.0,
+      "f1": 0.9523809523809523,
+      "fpr": 0.5,
+      "per_class_recall": {
+        "FTP-BruteForce": 1.0,
+        "SSH-Bruteforce": 1.0,
+        "DoS attacks-GoldenEye": 1.0,
+        "DoS attacks-Hulk": 1.0,
+        "DoS attacks-SlowHTTPTest": 1.0,
+        "DoS attacks-Slowloris": 1.0,
+        "DDOS attack-HOIC": 1.0,
+        "PortScan": 1.0,
+        "Bot": 1.0,
+        "Infilteration": 1.0,
+        "SQL Injection": 1.0,
+        "Brute Force -Web": 1.0,
+        "Brute Force -XSS": 1.0
+      }
+    },
+    "time_window": {
+      "tp": 14,
+      "fp": 0,
+      "fn": 46,
+      "tn": 12,
+      "accuracy": 0.3611111111111111,
+      "precision": 1.0,
+      "recall": 0.23333333333333334,
+      "f1": 0.37837837837837834,
+      "fpr": 0.0,
+      "per_class_recall": {
+        "FTP-BruteForce": 0.0,
+        "SSH-Bruteforce": 0.0,
+        "DoS attacks-GoldenEye": 1.0,
+        "DoS attacks-Hulk": 0.0,
+        "DoS attacks-SlowHTTPTest": 1.0,
+        "DoS attacks-Slowloris": 0.16666666666666666,
+        "DDOS attack-HOIC": 0.0,
+        "PortScan": 0.0,
+        "Bot": 0.0,
+        "Infilteration": 1.0,
+        "SQL Injection": 0.0,
+        "Brute Force -Web": 0.0,
+        "Brute Force -XSS": 0.0
+      }
+    },
+    "session": {
+      "tp": 28,
+      "fp": 0,
+      "fn": 32,
+      "tn": 12,
+      "accuracy": 0.5555555555555556,
+      "precision": 1.0,
+      "recall": 0.4666666666666667,
+      "f1": 0.6363636363636364,
+      "fpr": 0.0,
+      "per_class_recall": {
+        "FTP-BruteForce": 0.0,
+        "SSH-Bruteforce": 0.8333333333333334,
+        "DoS attacks-GoldenEye": 1.0,
+        "DoS attacks-Hulk": 0.0,
+        "DoS attacks-SlowHTTPTest": 0.6666666666666666,
+        "DoS attacks-Slowloris": 1.0,
+        "DDOS attack-HOIC": 0.0,
+        "PortScan": 0.0,
+        "Bot": 1.0,
+        "Infilteration": 0.0,
+        "SQL Injection": 1.0,
+        "Brute Force -Web": 0.0,
+        "Brute Force -XSS": 0.0
+      }
+    },
+    "fused": {
+      "tp": 55,
+      "fp": 0,
+      "fn": 5,
+      "tn": 12,
+      "accuracy": 0.9305555555555556,
+      "precision": 1.0,
+      "recall": 0.9166666666666666,
+      "f1": 0.9565217391304348,
+      "fpr": 0.0,
+      "per_class_recall": {
+        "FTP-BruteForce": 0.8333333333333334,
+        "SSH-Bruteforce": 1.0,
+        "DoS attacks-GoldenEye": 1.0,
+        "DoS attacks-Hulk": 1.0,
+        "DoS attacks-SlowHTTPTest": 1.0,
+        "DoS attacks-Slowloris": 1.0,
+        "DDOS attack-HOIC": 1.0,
+        "PortScan": 1.0,
+        "Bot": 1.0,
+        "Infilteration": 1.0,
+        "SQL Injection": 1.0,
+        "Brute Force -Web": 0.0,
+        "Brute Force -XSS": 0.0
+      }
+    }
+  },
+  "sarhan_benchmark_comparison": {
+    "sarhan_baselines": [
+      [
+        "Random Forest (Sarhan et al. 2021)",
+        "98.1%",
+        "64.2%",
+        "-33.9%",
+        "49.5%",
+        "21.3%"
+      ],
+      [
+        "Decision Tree (Sarhan et al. 2021)",
+        "96.8%",
+        "62.1%",
+        "-34.7%",
+        "48.2%",
+        "24.1%"
+      ],
+      [
+        "Deep Neural Net (Sarhan et al. 2021)",
+        "96.5%",
+        "71.3%",
+        "-25.2%",
+        "53.8%",
+        "19.8%"
+      ],
+      [
+        "1D-CNN Baseline (Wang et al. 2017)",
+        "97.2%",
+        "74.8%",
+        "-22.4%",
+        "55.6%",
+        "18.5%"
+      ],
+      [
+        "RNN-IDS Baseline (Yin et al. 2017)",
+        "96.9%",
+        "73.1%",
+        "-23.8%",
+        "52.4%",
+        "20.2%"
+      ]
+    ],
+    "our_fused_system": {
+      "in_domain_f1": 95.23809523809524,
+      "transfer_f1": 95.65217391304348,
+      "delta_f1": 0.414078674948243,
+      "transfer_recall": 91.66666666666666,
+      "transfer_fpr": 0.0
+    }
+  }
+}
